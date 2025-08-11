@@ -43,25 +43,16 @@ void assign(Client *c, Window w, XWindowAttributes &wa){
 
 void createNewClient(Window w, XWindowAttributes &wa){
 	Client *c = nullptr, *n = nullptr;
+	int index = 1;
 
 	if(!client_head){
 		client_head = new Client;
 		assign(client_head, w, wa);
 	}
-	for(c = client_head; c->next; c = c->next);
+	for(c = client_head; c->next; c = c->next) index++;
 	n = new Client;
 	assign(n, w, wa);
 	c->next = n;
-}
-
-void displayClient(){
-	if(!client_head) return;
-	
-	Client *c = nullptr;
-	for(c = client_head; c; c = c->next){
-		std::cout << "x: " << c->x << '\n';
-		std::cout << "y: " << c->y << '\n';
-	}
 }
 
 };
@@ -183,7 +174,6 @@ void maprequest(XEvent &event){
 	
 	if( !XGetWindowAttributes(this->dpy, e->window, &wa) ) return;
 	client.createNewClient(e->window, wa);
-	client.displayClient();
 }
 
 // Functions
