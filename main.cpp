@@ -5,13 +5,66 @@
 #include <unistd.h>
 
 template <typename... Args>
-void debugme(const char *specifier, Args... arg){
-	const char *path = "/home/diandra/Documents/Coding/kawigrwm/debugme";
-	FILE *ptr = fopen(path, "a");
-	if(!ptr) return;
-	std::fprintf(ptr, specifier, arg...);
-	fclose(ptr);
+void debugme(int stream, const char* massage, Args... arg){
+	FILE *pStream = nullptr;
+	switch(stream){
+		case 0: pStream = stdout;break;
+		case 1: pStream = stdin;break;
+		case 2: pStream = stderr;break;
+	}
+	
+	std::cout << NAME << ": ";
+	std::fprintf(pStream, massage, arg...);
 }
+
+class LinkedListClient{
+private:
+class Client{
+public:
+Window win;
+Window root;
+int x, y, width, height;
+Screen *screen;
+Client *next = nullptr;
+};
+
+public:
+Client *client_head = nullptr;
+
+void assign(Client *c, Window w, XWindowAttributes &wa){
+	c->win = w;
+	c->root = wa.root;
+	c->x = wa.x;
+	c->y = wa.y;
+	c->width = wa.width;
+	c->height = wa.height;
+	c->screen = wa.screen;
+}
+
+void createNewClient(Window w, XWindowAttributes &wa){
+	Client *c = nullptr, *n = nullptr;
+
+	if(!client_head){
+		client_head = new Client;
+		assign(client_head, w, wa);
+	}
+	for(c = client_head; c->next; c = c->next);
+	n = new Client;
+	assign(n, w, wa);
+	c->next = n;
+}
+
+void displayClient(){
+	if(!client_head) return;
+	
+	Client *c = nullptr;
+	for(c = client_head; c; c = c->next){
+		std::cout << "x: " << c->x << '\n';
+		std::cout << "y: " << c->y << '\n';
+	}
+}
+
+};
 
 class keybind{
 public:	
@@ -52,6 +105,8 @@ Window root = None;
 bool running = true;
 std::vector<keybind::Key> *keys;
 
+LinkedListClient client;
+
 public:
 kawigrwm(std::vector<keybind::Key> &keys){
 	this->keys = &keys;
@@ -75,6 +130,9 @@ void err_mass(std::string massage){
 
 /* Several Main functions */
 void init(){
+	unsigned int event_mask = KeyPressMask|ButtonPressMask|PointerMotionMask\
+			                    |SubstructureRedirectMask;
+	
 	this->root = DefaultRootWindow(this->dpy);
 	
 	/* Grab Keys */
@@ -90,6 +148,8 @@ void init(){
 		for(const keybind::Key &key : *this->keys)
 			if(key.keysym == syms[ (k - start) * skip])
 				XGrabKey(this->dpy, (KeyCode)k, key.mod, this->root, true, GrabModeAsync, GrabModeAsync);
+
+	XSelectInput(this->dpy, this->root, event_mask);
 }
 
 void run(){
@@ -97,13 +157,33 @@ void run(){
 	while(this->running){
 		XNextEvent(this->dpy, &event);
 		switch(event.type){
-		case KeyPress: keypress(event);break;
+		case KeyPress:   keypress(event);break;
+		case MapRequest: maprequest(event);break;
 		}
 	}
 }
 
-void cleanup(){
-	// Cleaning what?
+// Events Function
+void keypress(XEvent &event){
+	using Code = keybind::Code;
+	XKeyPressedEvent *e = &event.xkey;
+	KeySym sym = XKeycodeToKeysym(this->dpy, (KeyCode)e->keycode, 0);
+
+	for(const keybind::Key &key : *this->keys)
+		if(key.mod == e->state && key.keysym == sym)
+			switch(key.code){
+				case Code::SPAWN: spawn(key.args);break;
+				case Code::EXIT:  exitwm();break;
+			}
+}
+
+void maprequest(XEvent &event){
+	XMapRequestEvent *e = &event.xmaprequest;
+	XWindowAttributes wa;
+	
+	if( !XGetWindowAttributes(this->dpy, e->window, &wa) ) return;
+	client.createNewClient(e->window, wa);
+	client.displayClient();
 }
 
 // Functions
@@ -119,34 +199,19 @@ void exitwm(){
 	this->running = false;
 }
 
-// Events Functions
-void keypress(XEvent &event){
-	using Code = keybind::Code;
-	XKeyPressedEvent *e = &event.xkey;
-	KeySym sym = XKeycodeToKeysym(this->dpy, (KeyCode)e->keycode, 0);
-
-	for(const keybind::Key &key : *this->keys)
-		if(key.mod == e->state && key.keysym == sym)
-			switch(key.code){
-				case Code::SPAWN: spawn(key.args);break;
-				case Code::EXIT:  exitwm();break;
-			}
-}
-
 };
 
 // Configuration
 #include "config.h"
 
-int main() {
+int main(){
 	kawigrwm wm(keys);
-	if( wm.open() ){
-		wm.err_mass("Can't open X Display");
+	if ( wm.open() ){
+		wm.err_mass("Can't open X display");
 		return EXIT_FAILURE;
 	}
 	wm.init();
 	wm.run();
-	wm.cleanup();
 	wm.close();
 	return EXIT_SUCCESS;
 }
