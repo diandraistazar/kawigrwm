@@ -17,17 +17,45 @@ void debugme(int stream, const char* massage, Args... arg){
 	std::fprintf(pStream, massage, arg...);
 }
 
-class LinkedListClient{
-private:
-class Client{
-public:
+struct Client; struct Monitor;
+
+/* Enum */
+enum Code{ SPAWN, EXIT };
+/* Arg */
+union Arg{
+	const void **v;
+	const int i;
+	const float f;
+};
+/* Key */
+struct Key{
+	unsigned int mod;
+	KeySym keysym;
+	Code code;
+	Arg args;
+}; 
+/* Button */
+struct Button{
+	unsigned int mod;
+	unsigned int button;
+	Code code;
+	Arg args;
+};
+/* Monitor */
+struct Monitor{
+	int mx, my, mw, mh;
+	Client *select = nullptr;
+};
+/* Client */
+struct Client{
 Window win;
 Window root;
 int x, y, width, height;
-Screen *screen;
 Client *next = nullptr;
+Monitor *mon = nullptr;
 };
 
+class LinkedListClient{
 public:
 Client *client_head = nullptr;
 
@@ -38,165 +66,97 @@ void assign(Client *c, Window w, XWindowAttributes &wa){
 	c->y = wa.y;
 	c->width = wa.width;
 	c->height = wa.height;
-	c->screen = wa.screen;
 }
 
-void createNewClient(Window w, XWindowAttributes &wa){
+void cleanup(){
+	Client *temp = nullptr;
+	while(client_head){
+		temp = client_head->next;
+		debugme(0, "Deleted %p\n", client_head);
+		delete client_head;
+		client_head = temp;
+	}
+}
+
+Client *createNewClient(){
 	Client *c = nullptr, *n = nullptr;
 	int index = 1;
 
 	if(!client_head){
 		client_head = new Client;
-		assign(client_head, w, wa);
+		return client_head;
 	}
 	for(c = client_head; c->next; c = c->next) index++;
 	n = new Client;
-	assign(n, w, wa);
 	c->next = n;
+	return n;
+}
+
+Client *findWindowClient(Window w){
+	Client *temp = client_head;
+	while(temp){
+		if(temp->win == w) return temp;
+		temp = temp->next;
+	}
+	return nullptr;
 }
 
 };
 
-class keybind{
-public:	
-
-/* Enum */
-enum Code{ SPAWN, EXIT };
-
-/* Arg */
-union Arg{
-	const void **v;
-	const int i;
-	const float f;
-};
-
-/* Key */
-struct Key{
-	unsigned int mod;
-	KeySym keysym;
-	Code code;
-	Arg args;
-}; 
-
-/* Button */
-struct Button{
-	unsigned int mod;
-	unsigned int button;
-	Code code;
-	Arg args;
-};
-
-};
+class kawigrwm; class Events; class Functions;
 
 class kawigrwm{
-private:
+public:
 /* Variabels */
 Display *dpy = nullptr;
 Window root = None;
 bool running = true;
-std::vector<keybind::Key> *keys;
-
+std::vector<Key> *p_keys = nullptr;
 LinkedListClient client;
+Monitor *mon = nullptr;
+Functions *func = nullptr;
+Events *event = nullptr;
 
-public:
-kawigrwm(std::vector<keybind::Key> &keys){
-	this->keys = &keys;
-}
-
-bool open(){
-	this->dpy = XOpenDisplay(NULL);
-	if(this->dpy != nullptr) return 0;
-	return 1;
-}
-
-bool close(){
-	if( XCloseDisplay(this->dpy) != BadGC ) return 0;
-	return 1;
-}
-
-void err_mass(std::string massage){
-	std::cerr << NAME << "-" << VERSION << ": "\
-	<< massage << std::endl;
-}
-
-/* Several Main functions */
-void init(){
-	unsigned int event_mask = KeyPressMask|ButtonPressMask|PointerMotionMask\
-			                    |SubstructureRedirectMask;
-	
-	this->root = DefaultRootWindow(this->dpy);
-	
-	/* Grab Keys */
-	// Yang Dilakukan, untuk mengambil dan mengetahui rentang keycodes yang dapat digunakan nantinya di grab
-	int start, end, k, skip;
-	KeySym *syms = nullptr;
-	XUngrabKey(this->dpy, AnyKey, AnyModifier, this->root);
-	XDisplayKeycodes(this->dpy, &start, &end);
-	syms = XGetKeyboardMapping(this->dpy, start, end - start + 1, &skip);
-	if(!syms) return;
-	
-	for(k = start; k <= end; k++)
-		for(const keybind::Key &key : *this->keys)
-			if(key.keysym == syms[ (k - start) * skip])
-				XGrabKey(this->dpy, (KeyCode)k, key.mod, this->root, true, GrabModeAsync, GrabModeAsync);
-
-	XSelectInput(this->dpy, this->root, event_mask);
-}
-
-void run(){
-	XEvent event;
-	while(this->running){
-		XNextEvent(this->dpy, &event);
-		switch(event.type){
-		case KeyPress:   keypress(event);break;
-		case MapRequest: maprequest(event);break;
-		}
-	}
-}
-
-// Events Function
-void keypress(XEvent &event){
-	using Code = keybind::Code;
-	XKeyPressedEvent *e = &event.xkey;
-	KeySym sym = XKeycodeToKeysym(this->dpy, (KeyCode)e->keycode, 0);
-
-	for(const keybind::Key &key : *this->keys)
-		if(key.mod == e->state && key.keysym == sym)
-			switch(key.code){
-				case Code::SPAWN: spawn(key.args);break;
-				case Code::EXIT:  exitwm();break;
-			}
-}
-
-void maprequest(XEvent &event){
-	XMapRequestEvent *e = &event.xmaprequest;
-	XWindowAttributes wa;
-	
-	if( !XGetWindowAttributes(this->dpy, e->window, &wa) ) return;
-	client.createNewClient(e->window, wa);
-}
-
-// Functions
-void spawn(const keybind::Arg &args){
-	pid_t pid = fork();
-	if(pid == 0){
-		execvp((char*)args.v[0], (char**)args.v);
-		err_mass("Can't open the program");
-	}
-}
-
-void exitwm(){
-	this->running = false;
-}
-
+kawigrwm(std::vector<Key> &keys);
+void err_mass(std::string massage);
+Display *open();
+void close();
+void init();
+void run();
+void manageClient(Window &w, XWindowAttributes &wa);
 };
+
+class Events{
+private:
+kawigrwm *wm = nullptr;
+Functions *func = nullptr;
+public:
+void init(kawigrwm *wm, Functions *func);
+void keypress(XEvent &event);
+void maprequest(XEvent &event);
+};
+
+class Functions{
+private:
+kawigrwm *wm = nullptr;
+Events *event = nullptr;
+public:
+void init(kawigrwm *wm, Events *event);
+void spawn(const Arg &args);
+void exitwm();
+};
+
+// Full implementation of class
+#include "include/kawigrwm-cls.h"
+#include "include/events-cls.h"
+#include "include/functions-cls.h"
 
 // Configuration
 #include "config.h"
 
 int main(){
 	kawigrwm wm(keys);
-	if ( wm.open() ){
+	if (!wm.open()){
 		wm.err_mass("Can't open X display");
 		return EXIT_FAILURE;
 	}
