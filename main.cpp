@@ -17,16 +17,10 @@
 #include <unistd.h>
 
 template <typename... Args>
-void debugme(int stream, const char* massage, Args... arg){
-	FILE *pStream = nullptr;
-	switch(stream){
-		case 0: pStream = stdout;break;
-		case 1: pStream = stdin;break;
-		case 2: pStream = stderr;break;
-	}
-	
-	std::cout << NAME << ": ";
+void debugme(const char* massage, Args... arg){
+	FILE *pStream = fopen("/home/diandra/Documents/Coding/kawigrwm/debugme", "a");
 	std::fprintf(pStream, massage, arg...);
+	fclose(pStream);
 }
 
 /* Enum */
@@ -65,6 +59,7 @@ struct Client{
 Window win;
 Window root;
 int x, y, width, height;
+Client *back = nullptr;
 Client *next = nullptr;
 Monitor *mon = nullptr;
 };
@@ -75,6 +70,8 @@ public:
 Client *client_head = nullptr;
 
 void assign(Client *c, Window w, XWindowAttributes &wa){
+	if(!c) return;
+
 	c->win = w;
 	c->root = wa.root;
 	c->x = wa.x;
@@ -87,13 +84,12 @@ void cleanup(){
 	Client *temp = nullptr;
 	while(client_head){
 		temp = client_head->next;
-		debugme(0, "Deleted %p\n", client_head);
 		delete client_head;
 		client_head = temp;
 	}
 }
 
-Client *createNewClient(){
+Client *createNewClient(Window &w, XWindowAttributes &wa){
 	Client *c = nullptr;
 
 	if(!client_head){
@@ -102,32 +98,32 @@ Client *createNewClient(){
 	}
 	for(c = client_head; c->next; c = c->next);
 	c->next = new Client;
+	c->next->back = c;
 	return c->next;
 }
 
 Client *findClient(Window w){
-	Client *temp = client_head;
-	while(temp){
-		if(temp->win == w) return temp;
-		temp = temp->next;
-	}
+	Client *temp = nullptr;
+	for(temp = client_head; temp; temp = temp->next)
+			if(temp->win == w) return temp;
 	return nullptr;
 }
 
 void deleteClient(Client *c){
-	Client *temp = nullptr, *next = nullptr;
+	Client *temp = nullptr, *next = nullptr, *back = nullptr;
 	// Checking first
 	if(!client_head) return;
-
-	if(!client_head->next){
+	
+	for(temp = client_head; temp != c; temp = temp->next);
+	if(client_head == temp){
+		next = client_head->next;
 		delete client_head;
-		client_head = nullptr;
+		client_head = next;
 		return;
 	}
-	for(temp = client_head; temp->next != c; temp = temp->next);
-	next = temp->next->next;
-	delete temp->next;
-	temp->next = next;
+	back = temp->back; next = temp->next;
+	delete temp;
+	if(back) back->next = next;
 }
 
 };
@@ -149,9 +145,9 @@ Events *event = nullptr;
 kawigrwm(std::vector<Key> &keys);
 void err_mass(std::string massage);
 Display *open();
+void init();
 void cleanup();
 void close();
-void init();
 void run();
 void manage(Window &w, XWindowAttributes &wa);
 void unmanage(Client *c);
@@ -165,9 +161,9 @@ kawigrwm *wm = nullptr;
 Functions *func = nullptr;
 public:
 void init(kawigrwm *wm, Functions *func);
-void keypress(XEvent &event);
-void maprequest(XEvent &event);
-void destroynotify(XEvent &event);
+void keypress(XKeyEvent &event);
+void maprequest(XMapRequestEvent &event);
+void destroynotify(XDestroyWindowEvent &event);
 };
 
 /* Functions class */

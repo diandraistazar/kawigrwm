@@ -3,12 +3,11 @@ void Events::init(kawigrwm *wm, Functions *func){
 	this->func = func;
 }
 
-void Events::keypress(XEvent &event){
-	XKeyPressedEvent *e = &event.xkey;
-	KeySym sym = XKeycodeToKeysym(this->wm->dpy, (KeyCode)e->keycode, 0);
+void Events::keypress(XKeyEvent &event){
+	KeySym sym = XKeycodeToKeysym(this->wm->dpy, (KeyCode)event.keycode, 0);
 
 	for(const Key &key : *this->wm->p_keys)
-		if(key.mod == e->state && key.keysym == sym)
+		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN: this->func->spawn(key.args);break;
 				case KILL : this->func->kill();break;
@@ -16,19 +15,17 @@ void Events::keypress(XEvent &event){
 			}
 }
 
-void Events::maprequest(XEvent &event){
-	XMapRequestEvent *e = &event.xmaprequest;
+void Events::maprequest(XMapRequestEvent &event){
 	XWindowAttributes wa;
 	
-	if( !XGetWindowAttributes(this->wm->dpy, e->window, &wa) ) return;
-	if(!this->wm->selmon->clients->findClient(e->window))
-		this->wm->manage(e->window, wa);
+	if( !XGetWindowAttributes(this->wm->dpy, event.window, &wa) ) return;
+	if(!this->wm->selmon->clients->findClient(event.window))
+		this->wm->manage(event.window, wa);
 }
 
-void Events::destroynotify(XEvent &event){
-	XDestroyWindowEvent *e = &event.xdestroywindow;
+void Events::destroynotify(XDestroyWindowEvent &event){
 	Client *c = nullptr;
 	
-	if((c = this->wm->selmon->clients->findClient(e->window)))
+	if((c = this->wm->selmon->clients->findClient(event.window)))
 		this->wm->unmanage(c);
 }
