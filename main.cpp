@@ -170,12 +170,12 @@ void exitwm();
 };
 
 // Full implementation of class
-#include "include/kawigrwm-cls.h"
-#include "include/events-cls.h"
-#include "include/functions-cls.h"
+#include "include/kawigrwm-cls.hpp"
+#include "include/events-cls.hpp"
+#include "include/functions-cls.hpp"
 
 // Configuration
-#include "config.h"
+#include "config.hpp"
 
 int main(){
 	kawigrwm wm(keys);
