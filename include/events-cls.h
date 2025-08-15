@@ -20,6 +20,14 @@ void Events::maprequest(XEvent &event){
 	XWindowAttributes wa;
 	
 	if( !XGetWindowAttributes(this->wm->dpy, e->window, &wa) ) return;
-	if(!this->wm->client.findWindowClient(e->window))
-		this->wm->manageClient(e->window, wa);
+	if(!this->wm->selmon->clients->findClient(e->window))
+		this->wm->manage(e->window, wa);
+}
+
+void Events::destroynotify(XEvent &event){
+	XDestroyWindowEvent *e = &event.xdestroywindow;
+	Client *c = nullptr;
+	
+	if((c = this->wm->selmon->clients->findClient(e->window)))
+		this->wm->unmanage(c);
 }

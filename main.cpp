@@ -17,8 +17,6 @@ void debugme(int stream, const char* massage, Args... arg){
 	std::fprintf(pStream, massage, arg...);
 }
 
-struct Client; struct Monitor;
-
 /* Enum */
 enum Code{ SPAWN, EXIT };
 /* Arg */
@@ -41,10 +39,14 @@ struct Button{
 	Code code;
 	Arg args;
 };
+
+struct Client; struct Monitor;
+class LinkedListClient;
 /* Monitor */
 struct Monitor{
-	int mx, my, mw, mh;
+	int mw, mh;
 	Client *select = nullptr;
+	LinkedListClient *clients = nullptr;
 };
 /* Client */
 struct Client{
@@ -55,6 +57,7 @@ Client *next = nullptr;
 Monitor *mon = nullptr;
 };
 
+/* LinkedList data structure for Client */
 class LinkedListClient{
 public:
 Client *client_head = nullptr;
@@ -79,20 +82,18 @@ void cleanup(){
 }
 
 Client *createNewClient(){
-	Client *c = nullptr, *n = nullptr;
-	int index = 1;
+	Client *c = nullptr;
 
 	if(!client_head){
 		client_head = new Client;
 		return client_head;
 	}
-	for(c = client_head; c->next; c = c->next) index++;
-	n = new Client;
-	c->next = n;
-	return n;
+	for(c = client_head; c->next; c = c->next);
+	c->next = new Client;
+	return c->next;
 }
 
-Client *findWindowClient(Window w){
+Client *findClient(Window w){
 	Client *temp = client_head;
 	while(temp){
 		if(temp->win == w) return temp;
@@ -101,10 +102,27 @@ Client *findWindowClient(Window w){
 	return nullptr;
 }
 
+void deleteClient(Client *c){
+	Client *temp = nullptr, *next = nullptr;
+	// Checking first
+	if(!client_head) return;
+
+	if(!client_head->next){
+		delete client_head;
+		client_head = nullptr;
+		return;
+	}
+	for(temp = client_head; temp->next != c; temp = temp->next);
+	next = temp->next->next;
+	delete temp->next;
+	temp->next = next;
+}
+
 };
 
 class kawigrwm; class Events; class Functions;
 
+/* Kawigrwm class */
 class kawigrwm{
 public:
 /* Variabels */
@@ -112,20 +130,23 @@ Display *dpy = nullptr;
 Window root = None;
 bool running = true;
 std::vector<Key> *p_keys = nullptr;
-LinkedListClient client;
-Monitor *mon = nullptr;
+Monitor *selmon = nullptr;	/* select monitor */
 Functions *func = nullptr;
 Events *event = nullptr;
 
 kawigrwm(std::vector<Key> &keys);
 void err_mass(std::string massage);
 Display *open();
+void cleanup();
 void close();
 void init();
 void run();
-void manageClient(Window &w, XWindowAttributes &wa);
+void manage(Window &w, XWindowAttributes &wa);
+void unmanage(Client *c);
+void focus(Client *c);
 };
 
+/* Events class */
 class Events{
 private:
 kawigrwm *wm = nullptr;
@@ -134,8 +155,10 @@ public:
 void init(kawigrwm *wm, Functions *func);
 void keypress(XEvent &event);
 void maprequest(XEvent &event);
+void destroynotify(XEvent &event);
 };
 
+/* Functions class */
 class Functions{
 private:
 kawigrwm *wm = nullptr;
@@ -162,6 +185,7 @@ int main(){
 	}
 	wm.init();
 	wm.run();
+	wm.cleanup();
 	wm.close();
 	return EXIT_SUCCESS;
 }
