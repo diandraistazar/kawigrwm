@@ -11,7 +11,8 @@ void Events::keypress(XEvent &event){
 		if(key.mod == e->state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN: this->func->spawn(key.args);break;
-				case EXIT:  this->func->exitwm();break;
+				case KILL : this->func->kill();break;
+				case EXIT : this->func->exitwm();break;
 			}
 }
 

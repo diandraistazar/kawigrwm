@@ -91,4 +91,5 @@ void kawigrwm::unmanage(Client *c){
 
 void kawigrwm::focus(Client *c){
 	if(c) XSetInputFocus(this->dpy, c->win, RevertToPointerRoot, CurrentTime);
+	this->selmon->select = c;
 }

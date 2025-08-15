@@ -1,3 +1,15 @@
+/* TODO */
+// allow spawn window (DONE)
+// allow exitwm (DONE)
+// allow focus (DONE)
+// add another functions
+// allow move window
+// allow resize window
+// allow adjust focus window
+// allow change another workspace
+// allow patches like dwm
+// be minimalist and fast
+
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <iostream>
@@ -18,7 +30,7 @@ void debugme(int stream, const char* massage, Args... arg){
 }
 
 /* Enum */
-enum Code{ SPAWN, EXIT };
+enum Code{ SPAWN, KILL, EXIT };
 /* Arg */
 union Arg{
 	const void **v;
@@ -167,6 +179,7 @@ public:
 void init(kawigrwm *wm, Events *event);
 void spawn(const Arg &args);
 void exitwm();
+void kill();
 };
 
 // Full implementation of class
@@ -177,6 +190,7 @@ void exitwm();
 // Configuration
 #include "config.hpp"
 
+/* Main functions */
 int main(){
 	kawigrwm wm(keys);
 	if (!wm.open()){
@@ -184,8 +198,8 @@ int main(){
 		return EXIT_FAILURE;
 	}
 	wm.init();
-	wm.run();
-	wm.cleanup();
+	wm.run(); 
+	wm.cleanup(); 
 	wm.close();
 	return EXIT_SUCCESS;
 }

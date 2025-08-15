@@ -17,3 +17,12 @@ void Functions::exitwm(){
 	this->wm->running = false;
 }
 
+void Functions::kill(){
+	if(!this->wm->selmon->select) return;
+	
+	XKillClient(this->wm->dpy, this->wm->selmon->select->win);
+	XSync(this->wm->dpy, false);
+
+	this->wm->unmanage(this->wm->selmon->select);
+	debugme(0, "killed a window\n");
+}
