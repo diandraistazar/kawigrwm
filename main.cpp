@@ -61,7 +61,6 @@ Window root;
 int x, y, width, height;
 Client *back = nullptr;
 Client *next = nullptr;
-Monitor *mon = nullptr;
 };
 
 /* LinkedList data structure for Client */
