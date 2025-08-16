@@ -15,6 +15,14 @@ void Events::keypress(XKeyEvent &event){
 			}
 }
 
+void Events::buttonpress(XButtonEvent &event){
+	for(const Button &button : *this->wm->p_buttons)
+		if(button.mod == event.state && button.button == event.button)
+			switch(button.code){
+				case MOVE : this->func->movewindow();break;
+			}
+}
+
 void Events::maprequest(XMapRequestEvent &event){
 	XWindowAttributes wa;
 	
@@ -25,7 +33,6 @@ void Events::maprequest(XMapRequestEvent &event){
 
 void Events::destroynotify(XDestroyWindowEvent &event){
 	Client *c = nullptr;
-	
 	if((c = this->wm->selmon->clients->findClient(event.window)))
 		this->wm->unmanage(c);
 }

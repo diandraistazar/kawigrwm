@@ -2,11 +2,11 @@
 // allow spawn window (DONE)
 // allow exitwm (DONE)
 // allow focus (DONE)
-// add another functions
-// allow move window
-// allow resize window
+// add another functions (Working) 
+	// allow move window (working)
+	// allow resize window
+	// allow change another workspace (tags)
 // allow adjust focus window
-// allow change another workspace
 // allow patches like dwm
 // be minimalist and fast
 
@@ -24,7 +24,7 @@ void debugme(const char* massage, Args... arg){
 }
 
 /* Enum */
-enum Code{ SPAWN, KILL, EXIT };
+enum Code{ SPAWN, KILL, EXIT, MOVE };
 /* Arg */
 union Arg{
 	const void **v;
@@ -35,14 +35,14 @@ union Arg{
 struct Key{
 	unsigned int mod;
 	KeySym keysym;
-	Code code;
+	unsigned int code;
 	Arg args;
 }; 
 /* Button */
 struct Button{
 	unsigned int mod;
 	unsigned int button;
-	Code code;
+	unsigned code;
 	Arg args;
 };
 
@@ -137,17 +137,19 @@ Display *dpy = nullptr;
 Window root = None;
 bool running = true;
 std::vector<Key> *p_keys = nullptr;
+std::vector<Button> *p_buttons = nullptr;
 Monitor *selmon = nullptr;	/* select monitor */
 Functions *func = nullptr;
 Events *event = nullptr;
 
-kawigrwm(std::vector<Key> &keys);
+kawigrwm(std::vector<Key> &keys, std::vector<Button> &buttons);
 void err_mass(std::string massage);
 Display *open();
 void init();
 void cleanup();
 void close();
 void run();
+void grabbuttons(Window &w);
 void manage(Window &w, XWindowAttributes &wa);
 void unmanage(Client *c);
 void focus(Client *c);
@@ -161,6 +163,7 @@ Functions *func = nullptr;
 public:
 void init(kawigrwm *wm, Functions *func);
 void keypress(XKeyEvent &event);
+void buttonpress(XButtonEvent &event);
 void maprequest(XMapRequestEvent &event);
 void destroynotify(XDestroyWindowEvent &event);
 };
@@ -175,6 +178,7 @@ void init(kawigrwm *wm, Events *event);
 void spawn(const Arg &args);
 void exitwm();
 void kill();
+void movewindow();
 };
 
 // Full implementation of class
@@ -187,7 +191,7 @@ void kill();
 
 /* Main functions */
 int main(){
-	kawigrwm wm(keys);
+	kawigrwm wm(keys, buttons);
 	if (!wm.open()){
 		wm.err_mass("Can't open X display");
 		return EXIT_FAILURE;

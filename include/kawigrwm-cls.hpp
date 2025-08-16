@@ -1,5 +1,6 @@
-kawigrwm::kawigrwm(std::vector<Key> &keys){
+kawigrwm::kawigrwm(std::vector<Key> &keys, std::vector<Button> &buttons){
 	this->p_keys = &keys;
+	this->p_buttons = &buttons;
 }
 
 void kawigrwm::err_mass(std::string massage){
@@ -15,6 +16,8 @@ Display *kawigrwm::open(){
 }
 
 void kawigrwm::init(){
+	int start, end, k, skip;
+	KeySym *syms = nullptr;
 	XSetWindowAttributes wa;
 	
 	// Create Functions and Events memory
@@ -29,8 +32,6 @@ void kawigrwm::init(){
 	
 	/* Grab Keys */
 	// Yang Dilakukan, untuk mengambil dan mengetahui rentang keycodes yang dapat digunakan nantinya di grab
-	int start, end, k, skip;
-	KeySym *syms = nullptr;
 	XUngrabKey(this->dpy, AnyKey, AnyModifier, this->root);
 	XDisplayKeycodes(this->dpy, &start, &end);
 	syms = XGetKeyboardMapping(this->dpy, start, end - start + 1, &skip);
@@ -39,10 +40,10 @@ void kawigrwm::init(){
 		for(const Key &key : *this->p_keys)
 			if(key.keysym == syms[ (k - start) * skip])
 				XGrabKey(this->dpy, (KeyCode)k, key.mod, this->root, true, GrabModeAsync, GrabModeAsync);
-
+	
 	// Change root window attributes
 	wa.event_mask = KeyPressMask|ButtonPressMask|PointerMotionMask\
-			          |SubstructureRedirectMask|SubstructureNotifyMask\
+			        |SubstructureRedirectMask|SubstructureNotifyMask\
 	                |EnterWindowMask;
 	XChangeWindowAttributes(this->dpy, this->root, CWEventMask, &wa);
 	XSelectInput(this->dpy, this->root, wa.event_mask);
@@ -70,10 +71,18 @@ void kawigrwm::run(){
 		XNextEvent(this->dpy, &event);
 		switch(event.type){
 		case KeyPress     : this->event->keypress(event.xkey);break;
+		case ButtonPress  : this->event->buttonpress(event.xbutton);break;
 		case MapRequest   : this->event->maprequest(event.xmaprequest);break;
 		case DestroyNotify: this->event->destroynotify(event.xdestroywindow);break;
 		}
 	}
+}
+
+void kawigrwm::grabbuttons(Window &w){
+	XUngrabButton(this->dpy, AnyButton, AnyModifier, w);
+	/* Grab buttons */
+	for(const Button &button : *this->p_buttons)
+		XGrabButton(this->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 
 void kawigrwm::manage(Window &w, XWindowAttributes &wa){
@@ -81,11 +90,11 @@ void kawigrwm::manage(Window &w, XWindowAttributes &wa){
 	this->selmon->clients->assign(temp, w, wa);
 	XMapWindow(this->dpy, w);
 	XSync(this->dpy, false);
+	grabbuttons(temp->win);
 	focus(temp);
 }
 
 void kawigrwm::unmanage(Client *c){
-	if(!c) return;
 	focus(c->back);
 	this->selmon->clients->deleteClient(c);
 	XSync(this->dpy, false);
@@ -94,5 +103,7 @@ void kawigrwm::unmanage(Client *c){
 void kawigrwm::focus(Client *c){
 	if(c)
 		XSetInputFocus(this->dpy, c->win, RevertToPointerRoot, CurrentTime);
+	else 
+		XSetInputFocus(this->dpy, this->root, RevertToPointerRoot, CurrentTime);
 	this->selmon->select = c;
 }

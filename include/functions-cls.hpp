@@ -21,3 +21,27 @@ void Functions::kill(){
 	XKillClient(this->wm->dpy, this->wm->selmon->select->win);
 	this->wm->unmanage(this->wm->selmon->select);
 }
+
+void Functions::movewindow(){
+	int x, y;
+	XEvent event;
+	
+	XGrabPointer(this->wm->dpy, this->wm->root, false,\
+				    PointerMotionMask|ButtonPressMask|ButtonReleaseMask,\
+				    GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+	do{
+	XMaskEvent(this->wm->dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, &event);
+	switch(event.type){
+	case MotionNotify:
+		x = event.xmotion.x_root - this->wm->selmon->select->x;
+		y = event.xmotion.y_root - this->wm->selmon->select->y;
+		this->wm->selmon->select->x += x;
+		this->wm->selmon->select->y += y;
+		XMoveWindow(this->wm->dpy, this->wm->selmon->select->win,\
+			       this->wm->selmon->select->x,\
+			       this->wm->selmon->select->y);
+		break;
+	}
+	}while(event.type != ButtonRelease);
+	XUngrabPointer(this->wm->dpy, CurrentTime);
+}

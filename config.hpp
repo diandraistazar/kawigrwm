@@ -13,3 +13,7 @@ static std::vector<Key> keys = {
 	{MOD|SHIFT,XK_q,     KILL,  {0} },
 	{MOD|SHIFT,XK_e,     EXIT,  {0} },
 };
+
+static std::vector<Button> buttons = {
+	{MOD,      Button1,  MOVE,  {0}}
+};
