@@ -23,7 +23,7 @@ void Functions::kill(){
 }
 
 void Functions::movewindow(){
-	int x, y;
+	int x, y, lasttime = 0;
 	XEvent event;
 	
 	XGrabPointer(this->wm->dpy, this->wm->root, false,\
@@ -33,10 +33,13 @@ void Functions::movewindow(){
 	XMaskEvent(this->wm->dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, &event);
 	switch(event.type){
 	case MotionNotify:
+		if((event.xmotion.time - lasttime) <= 12)
+			continue;
+		lasttime = event.xmotion.time;
 		x = event.xmotion.x_root - this->wm->selmon->select->x;
 		y = event.xmotion.y_root - this->wm->selmon->select->y;
-		this->wm->selmon->select->x += x;
-		this->wm->selmon->select->y += y;
+		this->wm->selmon->select->x += x - (this->wm->selmon->select->width / 2);
+		this->wm->selmon->select->y += y - (this->wm->selmon->select->height / 2);
 		XMoveWindow(this->wm->dpy, this->wm->selmon->select->win,\
 			       this->wm->selmon->select->x,\
 			       this->wm->selmon->select->y);
