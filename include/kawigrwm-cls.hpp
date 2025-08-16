@@ -95,7 +95,7 @@ void kawigrwm::manage(Window &w, XWindowAttributes &wa){
 }
 
 void kawigrwm::unmanage(Client *c){
-	focus(c->back);
+	this->focus(c->back ? c->back : c->next);
 	this->selmon->clients->deleteClient(c);
 	XSync(this->dpy, false);
 }
@@ -105,5 +105,7 @@ void kawigrwm::focus(Client *c){
 		XSetInputFocus(this->dpy, c->win, RevertToPointerRoot, CurrentTime);
 	else 
 		XSetInputFocus(this->dpy, this->root, RevertToPointerRoot, CurrentTime);
-	this->selmon->select = c;
+	
+	if(this->selmon->select != c)
+		this->selmon->select = c;
 }

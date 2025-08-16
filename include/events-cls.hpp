@@ -11,6 +11,7 @@ void Events::keypress(XKeyEvent &event){
 			switch(key.code){
 				case SPAWN: this->func->spawn(key.args);break;
 				case KILL : this->func->kill();break;
+				case FOCUS: this->func->adjustfocus(key.args);break;
 				case EXIT : this->func->exitwm();break;
 			}
 }

@@ -24,7 +24,7 @@ void debugme(const char* massage, Args... arg){
 }
 
 /* Enum */
-enum Code{ SPAWN, KILL, EXIT, MOVE };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVE };
 /* Arg */
 union Arg{
 	const void **v;
@@ -67,6 +67,7 @@ Client *next = nullptr;
 class LinkedListClient{
 public:
 Client *client_head = nullptr;
+Client *client_tail = nullptr;
 
 void assign(Client *c, Window w, XWindowAttributes &wa){
 	if(!c) return;
@@ -93,11 +94,13 @@ Client *createNewClient(Window &w, XWindowAttributes &wa){
 
 	if(!client_head){
 		client_head = new Client;
+		client_tail = client_head;
 		return client_head;
 	}
 	for(c = client_head; c->next; c = c->next);
 	c->next = new Client;
 	c->next->back = c;
+	client_tail = c->next;
 	return c->next;
 }
 
@@ -113,16 +116,30 @@ void deleteClient(Client *c){
 	// Checking first
 	if(!client_head) return;
 	
-	for(temp = client_head; temp != c; temp = temp->next);
-	if(client_head == temp){
+	debugme("%p deleted\n", c);
+	if(client_head == c){
 		next = client_head->next;
 		delete client_head;
 		client_head = next;
+		if(client_head) client_head->back = nullptr;
+		client_tail = tail();
 		return;
 	}
+
+	for(temp = client_head; temp != c; temp = temp->next);
 	back = temp->back; next = temp->next;
 	delete temp;
 	if(back) back->next = next;
+	if(next) next->back = back;
+	client_tail = tail();
+
+}
+
+Client *tail(){
+	Client *tail = nullptr;
+	if(!client_head) return nullptr;
+	for(tail = client_head; tail->next; tail = tail->next);
+	return tail;
 }
 
 };
@@ -179,6 +196,7 @@ void spawn(const Arg &args);
 void exitwm();
 void kill();
 void movewindow();
+void adjustfocus(const Arg &args);
 };
 
 // Full implementation of class
