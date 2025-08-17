@@ -14,6 +14,7 @@
 #include <X11/keysym.h>
 #include <iostream>
 #include <vector>
+#include <memory>
 #include <unistd.h>
 
 template <typename... Args>
@@ -51,15 +52,15 @@ class LinkedListClient;
 /* Monitor */
 struct Monitor{
 	Client *select = nullptr;
-	LinkedListClient *clients = nullptr;
+	std::unique_ptr<LinkedListClient> clients;
 };
 /* Client */
 struct Client{
-Window win;
-Window root;
-int x, y, width, height;
-Client *back = nullptr;
-Client *next = nullptr;
+	Window win;
+	Window root;
+	int x, y, width, height;
+	Client *back = nullptr;
+	Client *next = nullptr;
 };
 
 /* LinkedList data structure for Client */
@@ -137,19 +138,26 @@ void display(){
 };
 
 class kawigrwm; class Events; class Functions;
+struct Variables{
+	Display *dpy = nullptr;
+	Window root = None;
+	bool running = true;
+	Monitor *selmon = nullptr;
+	kawigrwm *wm = nullptr;
+	Functions *func = nullptr;
+	Events *event = nullptr;
+};
 
 /* Kawigrwm class */
 class kawigrwm{
 public:
-/* Variabels */
-Display *dpy = nullptr;
-Window root = None;
-bool running = true;
 std::vector<Key> *p_keys = nullptr;
 std::vector<Button> *p_buttons = nullptr;
-Monitor *selmon = nullptr;	/* select monitor */
-Functions *func = nullptr;
-Events *event = nullptr;
+std::unique_ptr<LinkedListClient> clients;
+std::unique_ptr<Monitor> selmon;
+std::unique_ptr<Events> event;
+std::unique_ptr<Functions> func;
+std::unique_ptr<Variables> global;
 
 kawigrwm(std::vector<Key> &keys, std::vector<Button> &buttons);
 void err_mass(std::string massage);
@@ -167,10 +175,9 @@ void focus(Client *c);
 /* Events class */
 class Events{
 private:
-kawigrwm *wm = nullptr;
-Functions *func = nullptr;
+Variables *global = nullptr;
 public:
-void init(kawigrwm *wm, Functions *func);
+void init(Variables *global);
 void keypress(XKeyEvent &event);
 void buttonpress(XButtonEvent &event);
 void maprequest(XMapRequestEvent &event);
@@ -180,10 +187,9 @@ void destroynotify(XDestroyWindowEvent &event);
 /* Functions class */
 class Functions{
 private:
-kawigrwm *wm = nullptr;
-Events *event = nullptr;
+Variables *global = nullptr;
 public:
-void init(kawigrwm *wm, Events *event);
+void init(Variables *global);
 void spawn(const Arg &args);
 void exitwm();
 void kill();
