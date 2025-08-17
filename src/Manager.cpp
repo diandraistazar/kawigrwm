@@ -1,27 +1,29 @@
-kawigrwm::kawigrwm(std::vector<Key> &keys, std::vector<Button> &buttons){
+#include "../include/main.hpp"
+
+/* Manager class */
+Manager::Manager(std::vector<Key> &keys, std::vector<Button> &buttons){
 	this->p_keys = &keys;
 	this->p_buttons = &buttons;
-
 	this->global = std::make_unique<Variables>();
 }
 
-void kawigrwm::err_mass(std::string massage){
+void Manager::err_mass(std::string massage){
 	std::cerr << NAME << "-" << VERSION << ": "\
 	<< massage << std::endl;
 }
 
-Display *kawigrwm::open(){
+Display *Manager::open(){
 	this->global->dpy = XOpenDisplay(nullptr);
 	return this->global->dpy ? this->global->dpy : nullptr;
 }
 
-void kawigrwm::init(){
+void Manager::init(){
 	int start, end, k, skip;
 	KeySym *syms = nullptr;
 	XSetWindowAttributes wa;
 	
 	// Assign this object
-	this->global->wm = this;
+	this->global->man = this;
 	// Create Functions and Events memory
 	this->global->func = std::make_unique<Functions>();
 	this->global->event = std::make_unique<Events>();
@@ -56,7 +58,7 @@ void kawigrwm::init(){
 	focus(nullptr);
 }
 
-void kawigrwm::cleanup(){
+void Manager::cleanup(){
 	// Delete clients memory 
 	this->global->selmon->clients->cleanup();
 
@@ -64,11 +66,11 @@ void kawigrwm::cleanup(){
 	XUngrabKey(this->global->dpy, AnyKey, AnyModifier, this->global->root);
 }
 
-void kawigrwm::close(){
+void Manager::close(){
 	XCloseDisplay(this->global->dpy);
 }
 
-void kawigrwm::run(){
+void Manager::run(){
 	XEvent event;
 	while(this->global->running){
 		XNextEvent(this->global->dpy, &event);
@@ -81,14 +83,14 @@ void kawigrwm::run(){
 	}
 }
 
-void kawigrwm::grabbuttons(Window &w){
+void Manager::grabbuttons(Window &w){
 	XUngrabButton(this->global->dpy, AnyButton, AnyModifier, w);
 	/* Grab buttons */
 	for(const Button &button : *this->p_buttons)
 		XGrabButton(this->global->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 
-void kawigrwm::manage(Window &w, XWindowAttributes &wa){
+void Manager::manage(Window &w, XWindowAttributes &wa){
 	Client *temp = this->global->selmon->clients->createNewClient();
 	this->global->selmon->clients->assign(temp, w, wa);
 	XMapWindow(this->global->dpy, w);
@@ -97,13 +99,13 @@ void kawigrwm::manage(Window &w, XWindowAttributes &wa){
 	focus(temp);
 }
 
-void kawigrwm::unmanage(Client *c){
+void Manager::unmanage(Client *c){
 	focus(c->back ? c->back : c->next);
 	this->global->selmon->clients->deleteClient(c);
 	XSync(this->global->dpy, false);
 }
 
-void kawigrwm::focus(Client *c){
+void Manager::focus(Client *c){
 	if(this->global->selmon->select == c) return;
 	if(c)
 		XSetInputFocus(this->global->dpy, c->win, RevertToPointerRoot, CurrentTime);

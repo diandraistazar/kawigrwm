@@ -1,3 +1,6 @@
+#include "../include/main.hpp"
+
+/* Functions class */
 void Functions::init(Variables *global){
 	this->global = global;
 }
@@ -6,11 +9,11 @@ void Functions::spawn(const Arg &args){
 	pid_t pid = fork();
 	if(pid == 0){
 		execvp((char*)args.v[0], (char**)args.v);
-		this->global->wm->err_mass("Can't open the program");
+		this->global->man->err_mass("Can't open the program");
 	}
 }
 
-void Functions::exitwm(){
+void Functions::exitman(){
 	this->global->running = false;
 }
 
@@ -18,7 +21,7 @@ void Functions::kill(){
 	if(!this->global->selmon->select) return;
 	
 	XKillClient(this->global->dpy, this->global->selmon->select->win);
-	this->global->wm->unmanage(this->global->selmon->select);
+	this->global->man->unmanage(this->global->selmon->select);
 }
 
 void Functions::movewindow(){
@@ -65,5 +68,5 @@ void Functions::adjustfocus(const Arg &args){
 	XWarpPointer(this->global->dpy, None, temp->win,\
 			     0, 0, 0, 0,\
 			     temp->width / 2, temp->height /2);
-	this->global->wm->focus(temp);
+	this->global->man->focus(temp);
 }

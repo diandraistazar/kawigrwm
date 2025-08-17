@@ -1,3 +1,6 @@
+#include "../include/main.hpp"
+
+/* Events class */
 void Events::init(Variables *global){
 	this->global = global;
 }
@@ -5,18 +8,18 @@ void Events::init(Variables *global){
 void Events::keypress(XKeyEvent &event){
 	KeySym sym = XKeycodeToKeysym(this->global->dpy, (KeyCode)event.keycode, 0);
 
-	for(const Key &key : *this->global->wm->p_keys)
+	for(const Key &key : *this->global->man->p_keys)
 		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN: this->global->func->spawn(key.args);break;
 				case KILL : this->global->func->kill();break;
 				case FOCUS: this->global->func->adjustfocus(key.args);break;
-				case EXIT : this->global->func->exitwm();break;
+				case EXIT : this->global->func->exitman();break;
 			}
 }
 
 void Events::buttonpress(XButtonEvent &event){
-	for(const Button &button : *this->global->wm->p_buttons)
+	for(const Button &button : *this->global->man->p_buttons)
 		if(button.mod == event.state && button.button == event.button)
 			switch(button.code){
 				case MOVE : this->global->func->movewindow();break;
@@ -28,11 +31,11 @@ void Events::maprequest(XMapRequestEvent &event){
 	
 	if( !XGetWindowAttributes(this->global->dpy, event.window, &wa) ) return;
 	if(!this->global->selmon->clients->findClient(event.window))
-		this->global->wm->manage(event.window, wa);
+		this->global->man->manage(event.window, wa);
 }
 
 void Events::destroynotify(XDestroyWindowEvent &event){
 	Client *c = nullptr;
 	if((c = this->global->selmon->clients->findClient(event.window)))
-		this->global->wm->unmanage(c);
+		this->global->man->unmanage(c);
 }
