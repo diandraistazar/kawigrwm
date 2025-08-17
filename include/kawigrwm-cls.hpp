@@ -23,18 +23,15 @@ void kawigrwm::init(){
 	// Assign this object
 	this->global->wm = this;
 	// Create Functions and Events memory
-	this->func = std::make_unique<Functions>();
-	this->global->func = this->func.get();
-	this->event = std::make_unique<Events>();
-	this->global->event = this->event.get();
-	// Initialize func and event
+	this->global->func = std::make_unique<Functions>();
+	this->global->event = std::make_unique<Events>();
+
 	this->global->func->init(this->global.get());
 	this->global->event->init(this->global.get());
 
 	// Create selmon memory
-	this->selmon = std::make_unique<Monitor>();
-	this->selmon->clients = std::make_unique<LinkedListClient>();
-	this->global->selmon = this->selmon.get();
+	this->global->selmon = std::make_unique<Monitor>();
+	this->global->selmon->clients = std::make_unique<LinkedListClient>();
 
 	// Assignment some important things
 	this->global->root = DefaultRootWindow(this->global->dpy);

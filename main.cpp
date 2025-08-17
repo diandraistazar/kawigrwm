@@ -62,8 +62,18 @@ struct Client{
 	Client *back = nullptr;
 	Client *next = nullptr;
 };
+class kawigrwm; class Events; class Functions;
+struct Variables{
+	Display *dpy = nullptr;
+	Window root = None;
+	bool running = true;
+	kawigrwm *wm = nullptr;
+	std::unique_ptr<Functions> func;
+	std::unique_ptr<Events> event;
+	std::unique_ptr<Monitor> selmon;
+};
 
-/* LinkedList data structure for Client */
+/* LinkedListClient */
 class LinkedListClient{
 public:
 Client *client_head = nullptr;
@@ -137,26 +147,12 @@ void display(){
 
 };
 
-class kawigrwm; class Events; class Functions;
-struct Variables{
-	Display *dpy = nullptr;
-	Window root = None;
-	bool running = true;
-	Monitor *selmon = nullptr;
-	kawigrwm *wm = nullptr;
-	Functions *func = nullptr;
-	Events *event = nullptr;
-};
-
+/* Forward Decleration */
 /* Kawigrwm class */
 class kawigrwm{
 public:
 std::vector<Key> *p_keys = nullptr;
 std::vector<Button> *p_buttons = nullptr;
-std::unique_ptr<LinkedListClient> clients;
-std::unique_ptr<Monitor> selmon;
-std::unique_ptr<Events> event;
-std::unique_ptr<Functions> func;
 std::unique_ptr<Variables> global;
 
 kawigrwm(std::vector<Key> &keys, std::vector<Button> &buttons);
@@ -197,7 +193,7 @@ void movewindow();
 void adjustfocus(const Arg &args);
 };
 
-// Full implementation of class
+// Full implementation of classes
 #include "include/kawigrwm-cls.hpp"
 #include "include/events-cls.hpp"
 #include "include/functions-cls.hpp"

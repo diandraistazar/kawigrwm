@@ -15,7 +15,7 @@ void Functions::exitwm(){
 }
 
 void Functions::kill(){
-	if(!this->global->wm->selmon->select) return;
+	if(!this->global->selmon->select) return;
 	
 	XKillClient(this->global->dpy, this->global->selmon->select->win);
 	this->global->wm->unmanage(this->global->selmon->select);
