@@ -50,15 +50,16 @@ void Functions::movewindow(){
 }
 
 void Functions::adjustfocus(const Arg &args){
+	Client *temp = nullptr;
 	if(!this->wm->selmon->select) return;
 	if(args.i == -1)
-		this->wm->selmon->select = this->wm->selmon->select->back\
-	                               ? this->wm->selmon->select->back\
-		                           : this->wm->selmon->clients->client_tail;
+		temp = this->wm->selmon->select->back\
+	           ? this->wm->selmon->select->back\
+		       : this->wm->selmon->clients->client_tail;
 	else if(args.i == 1)
-		this->wm->selmon->select = this->wm->selmon->select->next\
-			                       ? this->wm->selmon->select->next\
-		                           : this->wm->selmon->clients->client_head;
-	
-	this->wm->focus(this->wm->selmon->select);
+		temp = this->wm->selmon->select->next\
+			   ? this->wm->selmon->select->next\
+		       : this->wm->selmon->clients->client_head;
+	else return;	
+	this->wm->focus(temp);
 }

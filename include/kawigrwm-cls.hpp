@@ -10,9 +10,7 @@ void kawigrwm::err_mass(std::string massage){
 
 Display *kawigrwm::open(){
 	this->dpy = XOpenDisplay(nullptr);
-	if(this->dpy)
-		return this->dpy;
-	return nullptr;
+	return this->dpy ? this->dpy : nullptr;
 }
 
 void kawigrwm::init(){
@@ -86,7 +84,7 @@ void kawigrwm::grabbuttons(Window &w){
 }
 
 void kawigrwm::manage(Window &w, XWindowAttributes &wa){
-	Client *temp = this->selmon->clients->createNewClient(w, wa);
+	Client *temp = this->selmon->clients->createNewClient();
 	this->selmon->clients->assign(temp, w, wa);
 	XMapWindow(this->dpy, w);
 	XSync(this->dpy, false);
@@ -95,17 +93,16 @@ void kawigrwm::manage(Window &w, XWindowAttributes &wa){
 }
 
 void kawigrwm::unmanage(Client *c){
-	this->focus(c->back ? c->back : c->next);
+	focus(c->back ? c->back : c->next);
 	this->selmon->clients->deleteClient(c);
 	XSync(this->dpy, false);
 }
 
 void kawigrwm::focus(Client *c){
+	if(this->selmon->select == c) return;
 	if(c)
 		XSetInputFocus(this->dpy, c->win, RevertToPointerRoot, CurrentTime);
 	else 
 		XSetInputFocus(this->dpy, this->root, RevertToPointerRoot, CurrentTime);
-	
-	if(this->selmon->select != c)
-		this->selmon->select = c;
+	this->selmon->select = c;
 }

@@ -6,7 +6,7 @@
 	// allow move window (working)
 	// allow resize window
 	// allow change another workspace (tags)
-// allow adjust focus window
+// allow adjust focus window (DONE)
 // allow patches like dwm
 // be minimalist and fast
 
@@ -50,7 +50,6 @@ struct Client; struct Monitor;
 class LinkedListClient;
 /* Monitor */
 struct Monitor{
-	int mw, mh;
 	Client *select = nullptr;
 	LinkedListClient *clients = nullptr;
 };
@@ -68,10 +67,10 @@ class LinkedListClient{
 public:
 Client *client_head = nullptr;
 Client *client_tail = nullptr;
+int count = 0;
 
 void assign(Client *c, Window w, XWindowAttributes &wa){
 	if(!c) return;
-
 	c->win = w;
 	c->root = wa.root;
 	c->x = wa.x;
@@ -86,22 +85,22 @@ void cleanup(){
 		temp = client_head->next;
 		delete client_head;
 		client_head = temp;
+		count--;
 	}
+	client_head = nullptr;
+	client_head = nullptr;
 }
 
-Client *createNewClient(Window &w, XWindowAttributes &wa){
-	Client *c = nullptr;
-
-	if(!client_head){
-		client_head = new Client;
-		client_tail = client_head;
-		return client_head;
+Client *createNewClient(){
+	Client *c = new Client;
+	if(!client_head) client_head = c;	
+	else{
+		client_tail->next = c;
+		c->back = client_tail;
 	}
-	for(c = client_head; c->next; c = c->next);
-	c->next = new Client;
-	c->next->back = c;
-	client_tail = c->next;
-	return c->next;
+	client_tail = c;
+	count++;
+	return c;
 }
 
 Client *findClient(Window w){
@@ -116,30 +115,23 @@ void deleteClient(Client *c){
 	// Checking first
 	if(!client_head) return;
 	
-	debugme("%p deleted\n", c);
-	if(client_head == c){
-		next = client_head->next;
-		delete client_head;
-		client_head = next;
-		if(client_head) client_head->back = nullptr;
-		client_tail = tail();
-		return;
-	}
-
-	for(temp = client_head; temp != c; temp = temp->next);
+	for(temp = client_head; temp && temp != c; temp = temp->next);
 	back = temp->back; next = temp->next;
-	delete temp;
-	if(back) back->next = next;
 	if(next) next->back = back;
-	client_tail = tail();
+	else client_tail = back;
 
+	if(back) back->next = next;
+	else client_head = next;
+	delete temp;
+	count--;
 }
 
-Client *tail(){
-	Client *tail = nullptr;
-	if(!client_head) return nullptr;
-	for(tail = client_head; tail->next; tail = tail->next);
-	return tail;
+void display(){
+	if(!client_head) return;
+	debugme("HEAD: %p\n", client_head);
+	for(Client *temp = client_head; temp != client_head && temp != client_tail; temp = temp->next)
+		debugme("CLIENT: %p\n", temp);
+	debugme("TAIL: %p\n", client_tail);
 }
 
 };
