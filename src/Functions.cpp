@@ -27,6 +27,16 @@ void Functions::kill(){
 void Functions::movewindow(){
 	int x, y, lasttime = 0;
 	XEvent event;
+	auto move = [this, &x, &y, &event](){
+		x = event.xmotion.x_root - this->global->selmon->select->x;
+		y = event.xmotion.y_root - this->global->selmon->select->y;
+		this->global->selmon->select->x += x - (this->global->selmon->select->width / 2);
+		this->global->selmon->select->y += y - (this->global->selmon->select->height / 2);
+		XMoveWindow(this->global->dpy, this->global->selmon->select->win,\
+			       this->global->selmon->select->x,\
+			       this->global->selmon->select->y);
+
+	};
 	
 	XGrabPointer(this->global->dpy, this->global->root, false,\
 				    PointerMotionMask|ButtonPressMask|ButtonReleaseMask,\
@@ -38,13 +48,47 @@ void Functions::movewindow(){
 		if((event.xmotion.time - lasttime) <= 12)
 			continue;
 		lasttime = event.xmotion.time;
+		move();
+		break;
+	}
+	}while(event.type != ButtonRelease);
+	XUngrabPointer(this->global->dpy, CurrentTime);
+}
+
+void Functions::resizewindow(){
+	int x, y, width_t, height_t, lasttime = 0;
+	XEvent event;
+	// Ini lambda, memungkinkan mendefinisikan fungsi langsung di tempat penggunaannya, tanpa harus membuatnya secara terpisah
+	auto resize = [this, &event, &x, &y, &width_t, &height_t](){
 		x = event.xmotion.x_root - this->global->selmon->select->x;
 		y = event.xmotion.y_root - this->global->selmon->select->y;
-		this->global->selmon->select->x += x - (this->global->selmon->select->width / 2);
-		this->global->selmon->select->y += y - (this->global->selmon->select->height / 2);
-		XMoveWindow(this->global->dpy, this->global->selmon->select->win,\
-			       this->global->selmon->select->x,\
-			       this->global->selmon->select->y);
+		width_t = this->global->selmon->select->width;
+		height_t = this->global->selmon->select->height;
+		
+		((width_t += x - (width_t / 2)) > 100)\
+		? this->global->selmon->select->width = width_t\
+		: 0;
+		
+		((height_t += y - (height_t / 2)) > 100)\
+		? this->global->selmon->select->height = height_t\
+		: 0;
+		XResizeWindow(this->global->dpy, this->global->selmon->select->win,\
+			       this->global->selmon->select->width,\
+			       this->global->selmon->select->height);
+
+	};
+	
+	XGrabPointer(this->global->dpy, this->global->root, false,\
+				    PointerMotionMask|ButtonPressMask|ButtonReleaseMask,\
+				    GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+	do{
+	XMaskEvent(this->global->dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, &event);
+	switch(event.type){
+	case MotionNotify:
+		if((event.xmotion.time - lasttime) <= 12)
+			continue;
+		lasttime = event.xmotion.time;
+		resize();
 		break;
 	}
 	}while(event.type != ButtonRelease);

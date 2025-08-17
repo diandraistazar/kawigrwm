@@ -107,8 +107,10 @@ void Manager::unmanage(Client *c){
 
 void Manager::focus(Client *c){
 	if(this->global->selmon->select == c) return;
-	if(c)
+	if(c){
 		XSetInputFocus(this->global->dpy, c->win, RevertToPointerRoot, CurrentTime);
+		XRaiseWindow(this->global->dpy, c->win);
+	}
 	else 
 		XSetInputFocus(this->global->dpy, this->global->root, RevertToPointerRoot, CurrentTime);
 	this->global->selmon->select = c;

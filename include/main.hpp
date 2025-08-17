@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 /* Enum */
-enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVE };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVE, RESIZE };
 /* Arg */
 union Arg{
 	const void **v;
@@ -97,6 +97,7 @@ void spawn(const Arg &args);
 void exitman();
 void kill();
 void movewindow();
+void resizewindow();
 void adjustfocus(const Arg &args);
 };
 
