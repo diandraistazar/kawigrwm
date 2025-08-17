@@ -61,5 +61,10 @@ void Functions::adjustfocus(const Arg &args){
 			   ? this->wm->selmon->select->next\
 		       : this->wm->selmon->clients->client_head;
 	else return;	
+	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
+	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut
+	XWarpPointer(this->wm->dpy, None, temp->win,\
+			     0, 0, 0, 0,\
+			     temp->width / 2, temp->height /2);
 	this->wm->focus(temp);
 }
