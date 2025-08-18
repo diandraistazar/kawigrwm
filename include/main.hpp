@@ -58,8 +58,8 @@ struct Variables{
 /* Manager class */
 class Manager{
 public:
-std::vector<Key> *p_keys = nullptr;
-std::vector<Button> *p_buttons = nullptr;
+std::vector<Key> &p_keys;
+std::vector<Button> &p_buttons;
 std::unique_ptr<Variables> global;
 
 Manager(std::vector<Key> &keys, std::vector<Button> &buttons);
@@ -78,9 +78,9 @@ void focus(Client *c);
 /* Events class */
 class Events{
 private:
-Variables *global = nullptr;
+std::unique_ptr<Variables> &global;
 public:
-void init(Variables *global);
+Events(std::unique_ptr<Variables> &global);
 void keypress(XKeyEvent &event);
 void buttonpress(XButtonEvent &event);
 void maprequest(XMapRequestEvent &event);
@@ -90,9 +90,9 @@ void destroynotify(XDestroyWindowEvent &event);
 /* Functions class */
 class Functions{
 private:
-Variables *global = nullptr;
+std::unique_ptr<Variables> &global;
 public:
-void init(Variables *global);
+Functions(std::unique_ptr<Variables> &global);
 void spawn(const Arg &args);
 void exitman();
 void kill();

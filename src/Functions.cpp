@@ -1,8 +1,8 @@
 #include "../include/main.hpp"
 
 /* Functions class */
-void Functions::init(Variables *global){
-	this->global = global;
+Functions::Functions(std::unique_ptr<Variables> &global) : global(global){
+	// No statement for now
 }
 
 void Functions::spawn(const Arg &args){
