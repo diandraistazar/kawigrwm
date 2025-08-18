@@ -1,12 +1,12 @@
 /* TODO */
-// allow spawn window (DONE)
-// allow exitwm (DONE)
-// allow focus (DONE)
 // add another functions (Working) 
-	// allow move window (working)
-	// allow resize window
+	// allow exitwm (DONE)
+	// allow spawn window (DONE)
+	// allow move window (DONE)
+	// allow resize window (DONE)
 	// allow change another workspace (tags)
-// allow adjust focus window (DONE)
+// allow adjust focus window, even with pointer (DONE)
+// Dynamic Manager (Tiling and stack)
 // allow patches like dwm
 // be minimalist and fast
 

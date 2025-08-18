@@ -71,7 +71,7 @@ void cleanup();
 void close();
 void run();
 void grabbuttons(Window &w);
-void manage(Window &w, XWindowAttributes &wa);
+void manage(Window &w);
 void unmanage(Client *c);
 void focus(Client *c);
 };
@@ -86,6 +86,7 @@ void keypress(XKeyEvent &event);
 void buttonpress(XButtonEvent &event);
 void maprequest(XMapRequestEvent &event);
 void destroynotify(XDestroyWindowEvent &event);
+void enternotify(XCrossingEvent &event);
 };
 
 /* Functions class */

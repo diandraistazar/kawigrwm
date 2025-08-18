@@ -74,6 +74,7 @@ void Manager::run(){
 		case ButtonPress  : this->global->event->buttonpress(event.xbutton);break;
 		case MapRequest   : this->global->event->maprequest(event.xmaprequest);break;
 		case DestroyNotify: this->global->event->destroynotify(event.xdestroywindow);break;
+		case EnterNotify  : this->global->event->enternotify(event.xcrossing);break;
 		}
 	}
 }
@@ -85,9 +86,13 @@ void Manager::grabbuttons(Window &w){
 		XGrabButton(this->global->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 
-void Manager::manage(Window &w, XWindowAttributes &wa){
+void Manager::manage(Window &w){
+	XWindowAttributes wa;
 	Client *temp = this->global->selmon->clients->createNewClient();
+	
+	XGetWindowAttributes(this->global->dpy, w, &wa);
 	this->global->selmon->clients->assign(temp, w, wa);
+	XSelectInput(this->global->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
 	XMapWindow(this->global->dpy, w);
 	XSync(this->global->dpy, false);
 	grabbuttons(temp->win);

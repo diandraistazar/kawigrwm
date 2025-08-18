@@ -27,15 +27,22 @@ void Events::buttonpress(XButtonEvent &event){
 }
 
 void Events::maprequest(XMapRequestEvent &event){
-	XWindowAttributes wa;
-	
-	if( !XGetWindowAttributes(this->global->dpy, event.window, &wa) ) return;
 	if(!this->global->selmon->clients->findClient(event.window))
-		this->global->man->manage(event.window, wa);
+		this->global->man->manage(event.window);
 }
 
 void Events::destroynotify(XDestroyWindowEvent &event){
 	Client *c = nullptr;
 	if((c = this->global->selmon->clients->findClient(event.window)))
 		this->global->man->unmanage(c);
+}
+
+void Events::enternotify(XCrossingEvent &event){
+	Client *c = nullptr;
+	
+	if(this->global->selmon->select && event.window == this->global->selmon->select->win) return;
+	c = event.window != this->global->root\
+		? this->global->selmon->clients->findClient(event.window)\
+		: nullptr;
+	this->global->man->focus(c);
 }
