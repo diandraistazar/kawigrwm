@@ -17,6 +17,6 @@ static std::vector<Key> keys = {
 };
 
 static std::vector<Button> buttons = {
-	{MOD,      Button1,  MOVE,    {0}},
-	{MOD,      Button3,  RESIZE,  {0}},
+	{MOD,      Button1,  MOVRESZ,   {.i = -1}},
+	{MOD,      Button3,  MOVRESZ,   {.i = 1}},
 };

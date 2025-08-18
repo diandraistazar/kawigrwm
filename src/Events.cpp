@@ -22,8 +22,7 @@ void Events::buttonpress(XButtonEvent &event){
 	for(const Button &button : this->global->man->p_buttons)
 		if(button.mod == event.state && button.button == event.button)
 			switch(button.code){
-				case MOVE  : this->global->func->movewindow();break;
-				case RESIZE: this->global->func->resizewindow();break;
+				case MOVRESZ  : this->global->func->movresz(button.args);break;
 			}
 }
 

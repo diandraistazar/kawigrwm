@@ -3,10 +3,11 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <functional>
 #include <unistd.h>
 
 /* Enum */
-enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVE, RESIZE };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ };
 /* Arg */
 union Arg{
 	const void **v;
@@ -96,8 +97,7 @@ Functions(std::unique_ptr<Variables> &global);
 void spawn(const Arg &args);
 void exitman();
 void kill();
-void movewindow();
-void resizewindow();
+void movresz(const Arg &args);
 void adjustfocus(const Arg &args);
 };
 
