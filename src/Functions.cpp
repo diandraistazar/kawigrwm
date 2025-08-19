@@ -39,19 +39,26 @@ void Functions::movresz(const Arg &args){
 	// deklerasi variabel selected tipe std::functions, yang berfungsi menyimpan berbagai object yang dapat dipanggil,
 	// seperti functions, lambda, method, atau pointer fungsi
 	// Intinya, dengan ini ente dapat menyimpan berbagai callable , sehingga dapat mencapai polymorphism
-	int x = 0, y = 0;
-	int width_temp = 0, height_temp = 0;
+	int x_temp = 0, y_temp = 0, x_root_temp = 0, y_root_temp = 0;
+	int width_temp, height_temp;
 	int lasttime = 0;
-	std::function<void()> selected;
+	int dummy_i;
+	unsigned int maskval;
 	XEvent event;
+	Window dummy_w;
+	std::function<void()> selected;
 	
 	/*move window*/
 	if(args.i == -1){
-		selected = [&g, &selmon, &x, &y, &event](){
-		x = event.xmotion.x_root - selmon->select->x;
-		y = event.xmotion.y_root - selmon->select->y;
-		selmon->select->x += x - (selmon->select->width / 2);
-		selmon->select->y += y - (selmon->select->height / 2);
+		selected = [&g, &selmon, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &event](){
+		x_temp = event.xmotion.x_root - x_root_temp;
+		y_temp = event.xmotion.y_root - y_root_temp;
+		
+		x_root_temp = event.xmotion.x_root;
+		y_root_temp = event.xmotion.y_root;
+
+		selmon->select->x += x_temp;
+		selmon->select->y += y_temp;
 		XMoveWindow(g->dpy, selmon->select->win,
 		            selmon->select->x,
 		            selmon->select->y);
@@ -59,35 +66,39 @@ void Functions::movresz(const Arg &args){
 	 }
 	 /*resize window*/
 	 else if(args.i == 1){
-		selected = [&g, &selmon, &event, &x, &y, &width_temp, &height_temp](){
-		x = event.xmotion.x_root - selmon->select->x;
-		y = event.xmotion.y_root - selmon->select->y;
+		selected = [&g, &selmon, &event, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &width_temp, &height_temp](){
+		x_temp = event.xmotion.x_root - x_root_temp;
+		y_temp = event.xmotion.y_root - y_root_temp;
+
+		x_root_temp = event.xmotion.x_root;
+		y_root_temp = event.xmotion.y_root;
+
 		width_temp = selmon->select->width;
 		height_temp = selmon->select->height;
 	
 		/*below are ternary operator*/
-		((width_temp += x - (width_temp / 2)) > 100)
-		? selmon->select->width = width_temp
-		: 0;
-		((height_temp += y - (height_temp / 2)) > 100)
-		? selmon->select->height = height_temp
-		: 0;
+		((width_temp += x_temp) > 100) ? selmon->select->width = width_temp : 0;
+		((height_temp += y_temp) > 100) ? selmon->select->height = height_temp : 0;
 		
 		XResizeWindow(g->dpy, selmon->select->win,
 		              selmon->select->width,
 		              selmon->select->height);
 		};
 	 }
+	 else return;
 	 
-	XGrabPointer(g->dpy, g->root, false,\
-				 PointerMotionMask|ButtonPressMask|ButtonReleaseMask,\
+	XQueryPointer(g->dpy, g->root, &dummy_w, &dummy_w, &x_root_temp, &y_root_temp, &dummy_i, &dummy_i, &maskval);
+	XGrabPointer(g->dpy, g->root, false,
+				 PointerMotionMask|ButtonPressMask|ButtonReleaseMask,
 				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+
 	do{
 	XMaskEvent(g->dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, &event);
 	switch(event.type){
 	case MotionNotify:
 		if((event.xmotion.time - lasttime) <= 12)
 			continue;
+
 		lasttime = event.xmotion.time;
 		selected();
 		break;
@@ -105,13 +116,9 @@ void Functions::adjustfocus(const Arg &args){
 	
 	Client *temp = nullptr;
 	if(args.i == -1)
-		temp = selmon->select->back
-	           ? selmon->select->back
-		       : selmon->clients->client_tail;
+		temp = selmon->select->back ? selmon->select->back : selmon->clients->client_tail;
 	else if(args.i == 1)
-		temp = selmon->select->next
-			   ? selmon->select->next
-		       : selmon->clients->client_head;
+		temp = selmon->select->next ? selmon->select->next : selmon->clients->client_head;
 	else return;	
 	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
 	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut
