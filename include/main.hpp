@@ -30,11 +30,11 @@ struct Button{
 };
 
 struct Client; struct Monitor;
-class LinkedListClient;
+class ClientList;
 /* Monitor */
 struct Monitor{
 	Client *select = nullptr;
-	std::unique_ptr<LinkedListClient> clients;
+	std::unique_ptr<ClientList> clients;
 };
 /* Client */
 struct Client{
@@ -64,7 +64,7 @@ std::vector<Button> &p_buttons;
 std::unique_ptr<Variables> global;
 
 Manager(std::vector<Key> &keys, std::vector<Button> &buttons);
-void err_mass(std::string massage);
+void err_mass(const std::string &massage);
 Display *open();
 void init();
 void cleanup();
@@ -102,8 +102,8 @@ void movresz(const Arg &args);
 void adjustfocus(const Arg &args);
 };
 
-/* LinkedListClient */
-class LinkedListClient{
+/* ClientList */
+class ClientList{
 public:
 Client *client_head = nullptr;
 Client *client_tail = nullptr;

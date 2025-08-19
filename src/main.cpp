@@ -7,7 +7,6 @@
 	// allow change another workspace (tags)
 // allow adjust focus window, even with pointer (DONE)
 // Dynamic Manager (Tiling and stack)
-// allow patches like dwm
 // be minimalist and fast
 
 #include "../include/main.hpp"

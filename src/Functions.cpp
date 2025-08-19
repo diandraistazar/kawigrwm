@@ -6,10 +6,12 @@ Functions::Functions(std::unique_ptr<Variables> &global) : global(global){
 }
 
 void Functions::spawn(const Arg &args){
+	auto &manager = this->global->man;
+	
 	pid_t pid = fork();
 	if(pid == 0){
 		execvp((char*)args.v[0], (char**)args.v);
-		this->global->man->err_mass("Can't open the program");
+		manager->err_mass("Can't open the program");
 	}
 }
 
@@ -18,58 +20,70 @@ void Functions::exitman(){
 }
 
 void Functions::kill(){
-	if(!this->global->selmon->select) return;
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	auto &manager = g->man;
 	
-	XKillClient(this->global->dpy, this->global->selmon->select->win);
-	this->global->man->unmanage(this->global->selmon->select);
+	if(!selmon->select) return;
+
+	XKillClient(g->dpy, selmon->select->win);
+	manager->unmanage(selmon->select);
 }
 
 void Functions::movresz(const Arg &args){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
 	
+	if(!selmon->select) return;
+
 	// deklerasi variabel selected tipe std::functions, yang berfungsi menyimpan berbagai object yang dapat dipanggil,
 	// seperti functions, lambda, method, atau pointer fungsi
 	// Intinya, dengan ini ente dapat menyimpan berbagai callable , sehingga dapat mencapai polymorphism
+	int x = 0, y = 0;
+	int width_temp = 0, height_temp = 0;
+	int lasttime = 0;
 	std::function<void()> selected;
-	int x, y, width_t, height_t, lasttime = 0;
 	XEvent event;
 	
-	// ternary operator
-	args.i == 1\
-	/* resize a window */
-	?selected = [this, &event, &x, &y, &width_t, &height_t](){
-	 x = event.xmotion.x_root - this->global->selmon->select->x;
-	 y = event.xmotion.y_root - this->global->selmon->select->y;
-	 width_t = this->global->selmon->select->width;
-	 height_t = this->global->selmon->select->height;
-		
-	 ((width_t += x - (width_t / 2)) > 100)\
-	 ? this->global->selmon->select->width = width_t\
-	 : 0;
-		
-	 ((height_t += y - (height_t / 2)) > 100)\
-	 ? this->global->selmon->select->height = height_t\
-	 : 0;
-	 XResizeWindow(this->global->dpy, this->global->selmon->select->win,\
-	  	           this->global->selmon->select->width,\
-			       this->global->selmon->select->height);
-
+	/*move window*/
+	if(args.i == -1){
+		selected = [&g, &selmon, &x, &y, &event](){
+		x = event.xmotion.x_root - selmon->select->x;
+		y = event.xmotion.y_root - selmon->select->y;
+		selmon->select->x += x - (selmon->select->width / 2);
+		selmon->select->y += y - (selmon->select->height / 2);
+		XMoveWindow(g->dpy, selmon->select->win,
+		            selmon->select->x,
+		            selmon->select->y);
+ 	 	};
 	 }
-	/* Or move a window */
-	:selected = [this, &x, &y, &event](){
-	 x = event.xmotion.x_root - this->global->selmon->select->x;
-	 y = event.xmotion.y_root - this->global->selmon->select->y;
-	 this->global->selmon->select->x += x - (this->global->selmon->select->width / 2);
-	 this->global->selmon->select->y += y - (this->global->selmon->select->height / 2);
-	 XMoveWindow(this->global->dpy, this->global->selmon->select->win,\
-			     this->global->selmon->select->x,\
-			     this->global->selmon->select->y);
- 	 };
-
-	XGrabPointer(this->global->dpy, this->global->root, false,\
+	 /*resize window*/
+	 else if(args.i == 1){
+		selected = [&g, &selmon, &event, &x, &y, &width_temp, &height_temp](){
+		x = event.xmotion.x_root - selmon->select->x;
+		y = event.xmotion.y_root - selmon->select->y;
+		width_temp = selmon->select->width;
+		height_temp = selmon->select->height;
+	
+		/*below are ternary operator*/
+		((width_temp += x - (width_temp / 2)) > 100)
+		? selmon->select->width = width_temp
+		: 0;
+		((height_temp += y - (height_temp / 2)) > 100)
+		? selmon->select->height = height_temp
+		: 0;
+		
+		XResizeWindow(g->dpy, selmon->select->win,
+		              selmon->select->width,
+		              selmon->select->height);
+		};
+	 }
+	 
+	XGrabPointer(g->dpy, g->root, false,\
 				 PointerMotionMask|ButtonPressMask|ButtonReleaseMask,\
 				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
 	do{
-	XMaskEvent(this->global->dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, &event);
+	XMaskEvent(g->dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, &event);
 	switch(event.type){
 	case MotionNotify:
 		if((event.xmotion.time - lasttime) <= 12)
@@ -79,25 +93,30 @@ void Functions::movresz(const Arg &args){
 		break;
 	}
 	}while(event.type != ButtonRelease);
-	XUngrabPointer(this->global->dpy, CurrentTime);	
+	XUngrabPointer(g->dpy, CurrentTime);	
 }
 
 void Functions::adjustfocus(const Arg &args){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	auto &manager = g->man;
+	
+	if(!selmon->select) return;
+	
 	Client *temp = nullptr;
-	if(!this->global->selmon->select) return;
 	if(args.i == -1)
-		temp = this->global->selmon->select->back\
-	           ? this->global->selmon->select->back\
-		       : this->global->selmon->clients->client_tail;
+		temp = selmon->select->back
+	           ? selmon->select->back
+		       : selmon->clients->client_tail;
 	else if(args.i == 1)
-		temp = this->global->selmon->select->next\
-			   ? this->global->selmon->select->next\
-		       : this->global->selmon->clients->client_head;
+		temp = selmon->select->next
+			   ? selmon->select->next
+		       : selmon->clients->client_head;
 	else return;	
 	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
 	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut
-	XWarpPointer(this->global->dpy, None, temp->win,\
-			     0, 0, 0, 0,\
+	XWarpPointer(g->dpy, None, temp->win,
+			     0, 0, 0, 0,
 			     temp->width / 2, temp->height /2);
-	this->global->man->focus(temp);
+	manager->focus(temp);
 }

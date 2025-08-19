@@ -4,7 +4,7 @@ NAME = kawigrwm
 CC = g++
 P_SRC = src/
 
-SRC = ${P_SRC}main.cpp ${P_SRC}Manager.cpp ${P_SRC}Events.cpp ${P_SRC}Functions.cpp ${P_SRC}LinkedListClient.cpp
+SRC = ${P_SRC}main.cpp ${P_SRC}Manager.cpp ${P_SRC}Events.cpp ${P_SRC}Functions.cpp ${P_SRC}ClientList.cpp
 OUT = ${NAME}
 LIBS = -lX11
 

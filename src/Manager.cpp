@@ -2,116 +2,145 @@
 
 /* Manager class */
 Manager::Manager(std::vector<Key> &keys, std::vector<Button> &buttons) : p_keys(keys), p_buttons(buttons){
-	this->global = std::make_unique<Variables>();
+	using std::make_unique;
+	auto &g = this->global;
+	
+	g = make_unique<Variables>();
 }
 
-void Manager::err_mass(std::string massage){
+void Manager::err_mass(const std::string &massage){
 	std::cerr << NAME << "-" << VERSION << ": "\
 	<< massage << std::endl;
 }
 
 Display *Manager::open(){
-	this->global->dpy = XOpenDisplay(nullptr);
-	return this->global->dpy ? this->global->dpy : nullptr;
+	using std::make_unique;
+	auto &g = this->global;
+	
+	g->dpy = XOpenDisplay(nullptr);
+	return g->dpy ? g->dpy : nullptr;
 }
 
 void Manager::init(){
+	using std::make_unique;
+	auto &g = this->global;
+	
 	int start, end, k, skip;
 	KeySym *syms = nullptr;
 	XSetWindowAttributes wa;
 	
 	// Assign this object
-	this->global->man = this;
+	g->man = this;
 	// Create Functions and Events memory
-	this->global->func = std::make_unique<Functions>(this->global);
-	this->global->event = std::make_unique<Events>(this->global);
+	g->func = make_unique<Functions>(g);
+	g->event = make_unique<Events>(g);
 
 	// Create selmon memory
-	this->global->selmon = std::make_unique<Monitor>();
-	this->global->selmon->clients = std::make_unique<LinkedListClient>();
+	g->selmon = make_unique<Monitor>();
+	g->selmon->clients = make_unique<ClientList>();
 
 	// Assignment some important things
-	this->global->root = DefaultRootWindow(this->global->dpy);
+	g->root = DefaultRootWindow(g->dpy);
 	
 	/* Grab Keys */
 	// Yang Dilakukan, untuk mengambil dan mengetahui rentang keycodes yang dapat digunakan nantinya di grab
-	XUngrabKey(this->global->dpy, AnyKey, AnyModifier, this->global->root);
-	XDisplayKeycodes(this->global->dpy, &start, &end);
-	syms = XGetKeyboardMapping(this->global->dpy, start, end - start + 1, &skip);
+	XUngrabKey(g->dpy, AnyKey, AnyModifier, g->root);
+	XDisplayKeycodes(g->dpy, &start, &end);
+	syms = XGetKeyboardMapping(g->dpy, start, end - start + 1, &skip);
 	if(!syms) return;
 	for(k = start; k <= end; k++)
 		for(const Key &key : this->p_keys)
 			if(key.keysym == syms[ (k - start) * skip])
-				XGrabKey(this->global->dpy, (KeyCode)k, key.mod, this->global->root, true, GrabModeAsync, GrabModeAsync);
+				XGrabKey(g->dpy, (KeyCode)k, key.mod, g->root, true, GrabModeAsync, GrabModeAsync);
 	
 	// Change root window attributes
 	wa.event_mask = KeyPressMask|ButtonPressMask|PointerMotionMask\
 			        |SubstructureRedirectMask|SubstructureNotifyMask\
 	                |EnterWindowMask;
-	XChangeWindowAttributes(this->global->dpy, this->global->root, CWEventMask, &wa);
-	XSelectInput(this->global->dpy, this->global->root, wa.event_mask);
+	XChangeWindowAttributes(g->dpy, g->root, CWEventMask, &wa);
+	XSelectInput(g->dpy, g->root, wa.event_mask);
 	focus(nullptr);
 }
 
 void Manager::cleanup(){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	
 	// Delete clients memory 
-	this->global->selmon->clients->cleanup();
+	selmon->clients->cleanup();
 
 	// Ungrab all keys
-	XUngrabKey(this->global->dpy, AnyKey, AnyModifier, this->global->root);
+	XUngrabKey(g->dpy, AnyKey, AnyModifier, g->root);
 }
 
 void Manager::close(){
-	XCloseDisplay(this->global->dpy);
+	auto &g = this->global;
+	
+	XCloseDisplay(g->dpy);
 }
 
 void Manager::run(){
+	auto &g = this->global;
+	auto &events = g->event;
+	
 	XEvent event;
-	while(this->global->running){
-		XNextEvent(this->global->dpy, &event);
+	while(g->running){
+		XNextEvent(g->dpy, &event);
 		switch(event.type){
-		case KeyPress     : this->global->event->keypress(event.xkey);break;
-		case ButtonPress  : this->global->event->buttonpress(event.xbutton);break;
-		case MapRequest   : this->global->event->maprequest(event.xmaprequest);break;
-		case DestroyNotify: this->global->event->destroynotify(event.xdestroywindow);break;
-		case EnterNotify  : this->global->event->enternotify(event.xcrossing);break;
+		case KeyPress     : events->keypress(event.xkey);break;
+		case ButtonPress  : events->buttonpress(event.xbutton);break;
+		case MapRequest   : events->maprequest(event.xmaprequest);break;
+		case DestroyNotify: events->destroynotify(event.xdestroywindow);break;
+		case EnterNotify  : events->enternotify(event.xcrossing);break;
 		}
 	}
 }
 
 void Manager::grabbuttons(Window &w){
-	XUngrabButton(this->global->dpy, AnyButton, AnyModifier, w);
+	auto &g = this->global;
+	
 	/* Grab buttons */
+	XUngrabButton(g->dpy, AnyButton, AnyModifier, w);
 	for(const Button &button : this->p_buttons)
-		XGrabButton(this->global->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
+		XGrabButton(g->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 
 void Manager::manage(Window &w){
-	XWindowAttributes wa;
-	Client *temp = this->global->selmon->clients->createNewClient();
+	auto &g = this->global;
+	auto &selmon = g->selmon;
 	
-	XGetWindowAttributes(this->global->dpy, w, &wa);
-	this->global->selmon->clients->assign(temp, w, wa);
-	XSelectInput(this->global->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
-	XMapWindow(this->global->dpy, w);
-	XSync(this->global->dpy, false);
+	XWindowAttributes wa;
+	Client *temp = selmon->clients->createNewClient();
+	
+	XGetWindowAttributes(g->dpy, w, &wa);
+	selmon->clients->assign(temp, w, wa);
+	XSelectInput(g->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
+	XMapWindow(g->dpy, w);
+	XSync(g->dpy, false);
 	grabbuttons(temp->win);
 	focus(temp);
 }
 
 void Manager::unmanage(Client *c){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	
 	focus(c->back ? c->back : c->next);
-	this->global->selmon->clients->deleteClient(c);
-	XSync(this->global->dpy, false);
+	selmon->clients->deleteClient(c);
+	XSync(g->dpy, false);
 }
 
 void Manager::focus(Client *c){
-	if(this->global->selmon->select == c) return;
+	auto &g = this->global;
+	auto &selmon = this->global->selmon;
+	
+	if(selmon->select == c) return;
 	if(c){
-		XSetInputFocus(this->global->dpy, c->win, RevertToPointerRoot, CurrentTime);
-		XRaiseWindow(this->global->dpy, c->win);
+		XSetInputFocus(g->dpy, c->win, RevertToPointerRoot, CurrentTime);
+		XRaiseWindow(g->dpy, c->win);
 	}
-	else 
-		XSetInputFocus(this->global->dpy, this->global->root, RevertToPointerRoot, CurrentTime);
-	this->global->selmon->select = c;
+	else{
+		XSetInputFocus(g->dpy, g->root, RevertToPointerRoot, CurrentTime);
+	}
+	selmon->select = c;
 }
