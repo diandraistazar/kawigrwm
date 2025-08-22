@@ -116,9 +116,9 @@ void Functions::adjustfocus(const Arg &args){
 	
 	Client *temp = nullptr;
 	if(args.i == -1)
-		temp = selmon->select->back ? selmon->select->back : selmon->clients->client_tail;
+		temp = selmon->select->back ? selmon->select->back : g->clients->clients[selmon->tag-1]->client_tail;
 	else if(args.i == 1)
-		temp = selmon->select->next ? selmon->select->next : selmon->clients->client_head;
+		temp = selmon->select->next ? selmon->select->next : g->clients->clients[selmon->tag-1]->client_head;
 	else return;	
 	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
 	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut

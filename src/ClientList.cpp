@@ -1,7 +1,19 @@
 #include "../include/main.hpp"
 
 /* ClientList */
-void ClientList::assign(Client *c, Window w, XWindowAttributes &wa){
+ClientList::ClientList(Variables *global){
+	auto &g = this->global;
+	
+	this->global = global;
+	
+	ClientTG *temp;
+	for(unsigned int index = 0; index < g->config->tags; index++){
+		temp = new ClientTG;
+		clients.push_back(temp);
+	}
+}
+
+void ClientList::assign(Client *c, Window w, XWindowAttributes &wa, Monitor *selmon){
 	if(!c) return;
 	c->win = w;
 	c->root = wa.root;
@@ -9,57 +21,69 @@ void ClientList::assign(Client *c, Window w, XWindowAttributes &wa){
 	c->y = wa.y;
 	c->width = wa.width;
 	c->height = wa.height;
+	c->tag = selmon->tag;
 }
 
 void ClientList::cleanup(){
+	auto &g = this->global;
+
+	ClientTG *current_tag = clients[g->selmon->tag-1];
 	Client *temp = nullptr;
-	while(client_head){
-		temp = client_head->next;
-		delete client_head;
-		client_head = temp;
-		count--;
+	while(current_tag->client_head){
+		temp = current_tag->client_head->next;
+		delete current_tag->client_head;
+		current_tag->client_head = temp;
 	}
-	client_head = nullptr;
-	client_head = nullptr;
+	current_tag->client_head = nullptr;
+	current_tag->client_head = nullptr;
 }
 
 Client *ClientList::createNewClient(){
-	Client *c = new Client;
+	auto &g = this->global;
+
+	ClientTG *current_tag = clients[g->selmon->tag-1];
+	Client *new_client = new Client;
 	
-	if(client_head){
-		client_tail->next = c;
-		c->back = client_tail;
+	if(current_tag->client_head){
+		current_tag->client_tail->next = new_client;
+		new_client->back = current_tag->client_tail;
 	}
 	else 
-		client_head = c;
-	
-	client_tail = c;
-	count++;
-	return c;
+		current_tag->client_head = new_client;
+
+	current_tag->client_tail = new_client;
+	return new_client;
 }
 
 Client *ClientList::findClient(Window w){
+	auto &g = this->global;
+
+	ClientTG *current_tag = clients[g->selmon->tag-1];
 	Client *temp = nullptr;
-	for(temp = client_head; temp; temp = temp->next)
+	
+	for(temp = current_tag->client_head; temp; temp = temp->next)
 			if(temp->win == w) return temp;
 	return nullptr;
 }
 
 void ClientList::deleteClient(Client *c){
-	Client *temp = nullptr;
-	Client *back = nullptr, *next = nullptr;
-	// Checking first
-	if(!client_head) return;
-	
-	for(temp = client_head; temp && temp != c; temp = temp->next);
+	auto &g = this->global;
+
+	ClientTG *current_tag = clients[g->selmon->tag-1];
+	Client *back, *next, *temp;
+
+	if(!current_tag->client_head) return;
+
+	for(temp = current_tag->client_head; temp && temp != c; temp = temp->next);
 	back = temp->back; next = temp->next;
-	
+
+	debugme("back: %p\ncurrent: %p\nnext: %p\n\n", back, temp, next);
+
 	if(next) next->back = back;
-	else client_tail = back;
+	else current_tag->client_tail = back;
 
 	if(back) back->next = next;
-	else client_head = next;
-	
+	else current_tag->client_head = next;
+
 	delete temp;
-	count--;
 }

@@ -1,4 +1,6 @@
 struct Configuration{
+	const unsigned int tags = 2;
+
 	/* Modifers */
 	#define MOD    Mod4Mask
 	#define ALT    Mod1Mask

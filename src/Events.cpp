@@ -34,19 +34,17 @@ void Events::buttonpress(XButtonEvent &event){
 void Events::maprequest(XMapRequestEvent &event){
 	auto &g = this->global;
 	auto &manager = g->man;
-	auto &selmon = g->selmon;
 	
-	if(!selmon->clients->findClient(event.window))
+	if(!g->clients->findClient(event.window))
 		manager->manage(event.window);
 }
 
 void Events::destroynotify(XDestroyWindowEvent &event){
 	auto &g = this->global;
 	auto &manager = g->man;
-	auto &selmon = g->selmon;
 	
 	Client *c = nullptr;
-	if((c = selmon->clients->findClient(event.window)))
+	if((c = g->clients->findClient(event.window)))
 		manager->unmanage(c);
 }
 
@@ -58,7 +56,7 @@ void Events::enternotify(XCrossingEvent &event){
 	Client *c = nullptr;
 	if(selmon->select && event.window == selmon->select->win) return;
 	c = event.window != g->root
-		? selmon->clients->findClient(event.window)
+		? g->clients->findClient(event.window)
 		: nullptr;
 	manager->focus(c);
 }

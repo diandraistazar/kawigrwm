@@ -6,7 +6,6 @@ Manager::Manager(){
 	auto &g = this->global;
 	
 	g = make_unique<Variables>();
-	g->config = make_unique<Configuration>();
 }
 
 void Manager::err_mass(const std::string &massage){
@@ -35,13 +34,16 @@ void Manager::init(){
 	// Create Functions and Events memory
 	g->func = make_unique<Functions>(g.get());
 	g->event = make_unique<Events>(g.get());
+	
+	g->config = make_unique<Configuration>();
 
 	// Create selmon memory
 	g->selmon = make_unique<Monitor>();
-	g->selmon->clients = make_unique<ClientList>();
+	g->clients = make_unique<ClientList>(g.get());
 
 	// Assignment some important things
 	g->root = DefaultRootWindow(g->dpy);
+	g->selmon->tag = 1; // default tag
 	
 	/* Grab Keys */
 	// Yang Dilakukan, untuk mengambil dan mengetahui rentang keycodes yang dapat digunakan nantinya di grab
@@ -65,10 +67,9 @@ void Manager::init(){
 
 void Manager::cleanup(){
 	auto &g = this->global;
-	auto &selmon = g->selmon;
 	
 	// Delete clients memory 
-	selmon->clients->cleanup();
+	g->clients->cleanup();
 
 	// Ungrab all keys
 	XUngrabKey(g->dpy, AnyKey, AnyModifier, g->root);
@@ -108,13 +109,12 @@ void Manager::grabbuttons(Window &w){
 
 void Manager::manage(Window &w){
 	auto &g = this->global;
-	auto &selmon = g->selmon;
 	
 	XWindowAttributes wa;
-	Client *temp = selmon->clients->createNewClient();
+	Client *temp = g->clients->createNewClient();
 	
 	XGetWindowAttributes(g->dpy, w, &wa);
-	selmon->clients->assign(temp, w, wa);
+	g->clients->assign(temp, w, wa, g->selmon.get());
 	XSelectInput(g->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
 	XMapWindow(g->dpy, w);
 	XSync(g->dpy, false);
@@ -124,10 +124,9 @@ void Manager::manage(Window &w){
 
 void Manager::unmanage(Client *c){
 	auto &g = this->global;
-	auto &selmon = g->selmon;
 	
 	focus(c->back ? c->back : c->next);
-	selmon->clients->deleteClient(c);
+	g->clients->deleteClient(c);
 	XSync(g->dpy, false);
 }
 

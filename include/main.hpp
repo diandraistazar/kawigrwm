@@ -6,6 +6,13 @@
 #include <functional>
 #include <unistd.h>
 
+template <typename... Args>
+void debugme(const char* massage, Args... args){
+	FILE *ptr = fopen("/home/diandra/Documents/Coding/kawigrwm/debugme", "a");
+	std::fprintf(ptr, massage, args...);
+	fclose(ptr);
+}
+
 /* Enum */
 enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ };
 /* Arg */
@@ -34,15 +41,20 @@ class ClientList;
 /* Monitor */
 struct Monitor{
 	Client *select = nullptr;
-	std::unique_ptr<ClientList> clients;
+	unsigned int tag;
 };
 /* Client */
 struct Client{
 	Window win;
 	Window root;
 	int x, y, width, height;
+	unsigned int tag;
 	Client *back = nullptr;
 	Client *next = nullptr;
+};
+struct ClientTG{
+	Client *client_head = nullptr;
+	Client *client_tail = nullptr;
 };
 class Manager; class Events; class Functions;
 struct Configuration;
@@ -54,6 +66,7 @@ struct Variables{
 	std::unique_ptr<Functions> func;
 	std::unique_ptr<Events> event;
 	std::unique_ptr<Monitor> selmon;
+	std::unique_ptr<ClientList> clients;
 	std::unique_ptr<Configuration> config;
 };
 
@@ -67,6 +80,8 @@ public:
 std::unique_ptr<Variables> global;
 
 Manager();
+template <typename... Args>
+void debugme(const char* massage, Args... args);
 void err_mass(const std::string &massage);
 Display *open();
 void init();
@@ -107,12 +122,12 @@ void adjustfocus(const Arg &args);
 
 /* ClientList */
 class ClientList{
+private:
+Variables *global;
 public:
-Client *client_head = nullptr;
-Client *client_tail = nullptr;
-int count = 0;
-
-void assign(Client *c, Window w, XWindowAttributes &wa);
+std::vector<ClientTG*> clients;
+ClientList(Variables *global);
+void assign(Client *c, Window w, XWindowAttributes &wa, Monitor *selmon);
 void cleanup();
 Client *createNewClient();
 Client *findClient(Window w);
