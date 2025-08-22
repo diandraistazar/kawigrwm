@@ -10,12 +10,10 @@
 // be minimalist and fast
 
 #include "../include/main.hpp"
-// Configuration
-#include "../include/config.hpp"
 
 /* Main functions */
 int main(){
-	Manager wm(keys, buttons);
+	Manager wm;
 	if (!wm.open()){
 		wm.err_mass("Can't open X display");
 		return EXIT_FAILURE;

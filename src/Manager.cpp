@@ -1,11 +1,12 @@
 #include "../include/main.hpp"
 
 /* Manager class */
-Manager::Manager(std::vector<Key> &keys, std::vector<Button> &buttons) : p_keys(keys), p_buttons(buttons){
+Manager::Manager(){
 	using std::make_unique;
 	auto &g = this->global;
 	
 	g = make_unique<Variables>();
+	g->config = make_unique<Configuration>();
 }
 
 void Manager::err_mass(const std::string &massage){
@@ -18,7 +19,7 @@ Display *Manager::open(){
 	auto &g = this->global;
 	
 	g->dpy = XOpenDisplay(nullptr);
-	return g->dpy ? g->dpy : nullptr;
+	return g->dpy;
 }
 
 void Manager::init(){
@@ -32,8 +33,8 @@ void Manager::init(){
 	// Assign this object
 	g->man = this;
 	// Create Functions and Events memory
-	g->func = make_unique<Functions>(g);
-	g->event = make_unique<Events>(g);
+	g->func = make_unique<Functions>(g.get());
+	g->event = make_unique<Events>(g.get());
 
 	// Create selmon memory
 	g->selmon = make_unique<Monitor>();
@@ -49,7 +50,7 @@ void Manager::init(){
 	syms = XGetKeyboardMapping(g->dpy, start, end - start + 1, &skip);
 	if(!syms) return;
 	for(k = start; k <= end; k++)
-		for(const Key &key : this->p_keys)
+		for(const Key &key : g->config->keys)
 			if(key.keysym == syms[ (k - start) * skip])
 				XGrabKey(g->dpy, (KeyCode)k, key.mod, g->root, true, GrabModeAsync, GrabModeAsync);
 	
@@ -101,7 +102,7 @@ void Manager::grabbuttons(Window &w){
 	
 	/* Grab buttons */
 	XUngrabButton(g->dpy, AnyButton, AnyModifier, w);
-	for(const Button &button : this->p_buttons)
+	for(const Button &button : g->config->buttons)
 		XGrabButton(g->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 

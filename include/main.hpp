@@ -45,25 +45,28 @@ struct Client{
 	Client *next = nullptr;
 };
 class Manager; class Events; class Functions;
+struct Configuration;
 struct Variables{
-	Display *dpy = nullptr;
+	Display *dpy;
 	Window root = None;
 	bool running = true;
-	Manager *man = nullptr;
+	Manager *man;
 	std::unique_ptr<Functions> func;
 	std::unique_ptr<Events> event;
 	std::unique_ptr<Monitor> selmon;
+	std::unique_ptr<Configuration> config;
 };
+
+// Configuration
+#include "../include/config.hpp"
 
 /* ## Forward Decleration ## */
 /* Manager class */
 class Manager{
 public:
-std::vector<Key> &p_keys;
-std::vector<Button> &p_buttons;
 std::unique_ptr<Variables> global;
 
-Manager(std::vector<Key> &keys, std::vector<Button> &buttons);
+Manager();
 void err_mass(const std::string &massage);
 Display *open();
 void init();
@@ -79,9 +82,9 @@ void focus(Client *c);
 /* Events class */
 class Events{
 private:
-std::unique_ptr<Variables> &global;
+Variables *global;
 public:
-Events(std::unique_ptr<Variables> &global);
+Events(Variables *global);
 void keypress(XKeyEvent &event);
 void buttonpress(XButtonEvent &event);
 void maprequest(XMapRequestEvent &event);
@@ -92,9 +95,9 @@ void enternotify(XCrossingEvent &event);
 /* Functions class */
 class Functions{
 private:
-std::unique_ptr<Variables> &global;
+Variables *global;
 public:
-Functions(std::unique_ptr<Variables> &global);
+Functions(Variables *global);
 void spawn(const Arg &args);
 void exitman();
 void kill();

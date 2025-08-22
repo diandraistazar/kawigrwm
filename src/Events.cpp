@@ -1,17 +1,16 @@
 #include "../include/main.hpp"
 
 /* Events class */
-Events::Events(std::unique_ptr<Variables> &global) : global(global){
+Events::Events(Variables *global) : global(global){
 	// No statement for now
 }
 
 void Events::keypress(XKeyEvent &event){
 	auto &g = this->global;
-	auto &manager = g->man;
 	auto &functions = g->func;
 	
 	KeySym sym = XKeycodeToKeysym(g->dpy, (KeyCode)event.keycode, 0);
-	for(const Key &key : manager->p_keys)
+	for(const Key &key : g->config->keys)
 		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN: functions->spawn(key.args);break;
@@ -23,10 +22,9 @@ void Events::keypress(XKeyEvent &event){
 
 void Events::buttonpress(XButtonEvent &event){
 	auto &g = this->global;
-	auto &manager = g->man;
 	auto &functions = g->func;
 	
-	for(const Button &button : manager->p_buttons)
+	for(const Button &button : g->config->buttons)
 		if(button.mod == event.state && button.button == event.button)
 			switch(button.code){
 				case MOVRESZ  : functions->movresz(button.args);break;

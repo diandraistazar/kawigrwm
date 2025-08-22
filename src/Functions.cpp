@@ -1,7 +1,7 @@
 #include "../include/main.hpp"
 
 /* Functions class */
-Functions::Functions(std::unique_ptr<Variables> &global) : global(global){
+Functions::Functions(Variables *global) : global(global){
 	// No statement for now
 }
 
