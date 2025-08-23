@@ -127,3 +127,27 @@ void Functions::adjustfocus(const Arg &args){
 			     temp->width / 2, temp->height /2);
 	manager->focus(temp);
 }
+
+void Functions::changeworkspace(const Arg &args){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	auto &manager = g->man;
+
+	ClientTG *current_tag;
+	Client *temp;
+	auto map_or_unmap = [&temp, &current_tag, &g](const std::string &arg){
+		for(temp = current_tag->client_head; temp; temp = temp->next)
+			if(arg == "map")
+				XMapWindow(g->dpy, temp->win);
+			else if(arg == "unmap")
+				XUnmapWindow(g->dpy, temp->win);
+	};
+
+	current_tag = g->clients->clients[selmon->tag-1];
+	map_or_unmap("unmap");
+
+	selmon->tag = args.i;
+	current_tag = g->clients->clients[selmon->tag-1];
+	map_or_unmap("map");
+	manager->focus(current_tag->client_head);
+}

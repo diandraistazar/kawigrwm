@@ -68,17 +68,14 @@ Client *ClientList::findClient(Window w){
 
 void ClientList::deleteClient(Client *c){
 	auto &g = this->global;
-
 	ClientTG *current_tag = clients[g->selmon->tag-1];
 	Client *back, *next, *temp;
 
 	if(!current_tag->client_head) return;
-
+	
 	for(temp = current_tag->client_head; temp && temp != c; temp = temp->next);
 	back = temp->back; next = temp->next;
-
-	debugme("back: %p\ncurrent: %p\nnext: %p\n\n", back, temp, next);
-
+	
 	if(next) next->back = back;
 	else current_tag->client_tail = back;
 
@@ -86,4 +83,17 @@ void ClientList::deleteClient(Client *c){
 	else current_tag->client_head = next;
 
 	delete temp;
+}
+
+void ClientList::display(){
+	auto &g = this->global;
+
+	for(unsigned int workspace = 0; workspace < g->config->tags; workspace++){
+		ClientTG *current_tag = clients[workspace];
+		Client *client;
+		debugme("Workspace %d\n", workspace);
+		for(client = current_tag->client_head; client; client = client->next){
+			debugme("client_tag: %d\n", client->tag);
+		}
+	}
 }

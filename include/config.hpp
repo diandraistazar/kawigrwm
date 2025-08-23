@@ -12,11 +12,13 @@ struct Configuration{
 	// ! please, use lower case for keysym
 	const std::vector<Key> keys = {
 	// mod        keysym    code   arg
-		{MOD,      XK_Return,SPAWN, SPAWN("alacritty")},
+		{MOD,      XK_Return,SPAWN,  SPAWN("alacritty")},
 		{MOD,      XK_j,     FOCUS,  { .i = -1 }},
 		{MOD,      XK_k,     FOCUS,  { .i = 1 }},
-		{MOD|SHIFT,XK_q,     KILL,  {0} },
-		{MOD|SHIFT,XK_e,     EXIT,  {0} },
+		{MOD,      XK_1,     CHGWORK,{ .i = 1 } },
+		{MOD,      XK_2,     CHGWORK,{ .i = 2 } },
+		{MOD|SHIFT,XK_q,     KILL,   {0} },
+		{MOD|SHIFT,XK_e,     EXIT,   {0} },
 	};
 
 	const std::vector<Button> buttons = {

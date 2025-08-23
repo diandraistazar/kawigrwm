@@ -13,10 +13,11 @@ void Events::keypress(XKeyEvent &event){
 	for(const Key &key : g->config->keys)
 		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
-				case SPAWN: functions->spawn(key.args);break;
-				case KILL : functions->kill();break;
-				case FOCUS: functions->adjustfocus(key.args);break;
-				case EXIT : functions->exitman();break;
+				case SPAWN   : functions->spawn(key.args);break;
+				case KILL    : functions->kill();break;
+				case FOCUS   : functions->adjustfocus(key.args);break;
+				case CHGWORK : functions->changeworkspace(key.args);break;
+				case EXIT    : functions->exitman();break;
 			}
 }
 

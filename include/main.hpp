@@ -1,3 +1,5 @@
+#pragma once
+
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <iostream>
@@ -14,7 +16,7 @@ void debugme(const char* massage, Args... args){
 }
 
 /* Enum */
-enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK };
 /* Arg */
 union Arg{
 	const void **v;
@@ -78,10 +80,7 @@ struct Variables{
 class Manager{
 public:
 std::unique_ptr<Variables> global;
-
 Manager();
-template <typename... Args>
-void debugme(const char* massage, Args... args);
 void err_mass(const std::string &massage);
 Display *open();
 void init();
@@ -118,6 +117,8 @@ void exitman();
 void kill();
 void movresz(const Arg &args);
 void adjustfocus(const Arg &args);
+void changeworkspace(const Arg &args);
+
 };
 
 /* ClientList */

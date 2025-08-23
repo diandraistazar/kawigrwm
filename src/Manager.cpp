@@ -35,6 +35,7 @@ void Manager::init(){
 	g->func = make_unique<Functions>(g.get());
 	g->event = make_unique<Events>(g.get());
 	
+	// Create config memory
 	g->config = make_unique<Configuration>();
 
 	// Create selmon memory
