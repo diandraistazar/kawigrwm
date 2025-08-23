@@ -144,10 +144,12 @@ void Functions::changeworkspace(const Arg &args){
 	Client *temp;
 	unsigned int tag_temp = selmon->tag;
 	
-	if(!strcmp((const char*)args.s, "left"))
+	if(args.i == -1)
 		tag_temp -= 1;
-	else if(!strcmp((const char*)args.s, "rigth"))
+	else if(args.i == -2)
 		tag_temp += 1;
+	else if(args.i >= 1 && args.i <= (int)config->tags)
+		tag_temp = args.i;
 
 	if( tag_temp == selmon->tag
 	   || tag_temp < 1

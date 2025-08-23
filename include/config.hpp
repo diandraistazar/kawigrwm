@@ -17,8 +17,8 @@ const std::vector<Key> keys = {
 	{MOD,      XK_Return,       SPAWN,   SPAWN("alacritty")},
 	{MOD,      XK_j,            FOCUS,   INT(-1)},
 	{MOD,      XK_k,            FOCUS,   INT(1)},
-	{MOD,      XK_bracketleft,  CHGWORK, STR("left")},
-	{MOD,      XK_bracketright, CHGWORK, STR("rigth")},
+	{MOD,      XK_bracketleft,  CHGWORK, INT(-1)},
+	{MOD,      XK_bracketright, CHGWORK, INT(-2)},
 	{MOD|SHIFT,XK_q,            KILL,    {0} },
 	{MOD|SHIFT,XK_e,            EXIT,    {0} },
 };
