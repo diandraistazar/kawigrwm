@@ -112,26 +112,31 @@ void Functions::adjustfocus(const Arg &args){
 	auto &selmon = g->selmon;
 	auto &manager = g->man;
 	
-	if(!selmon->select) return;
-	
 	Client *temp = nullptr;
-	if(args.i == -1)
-		temp = selmon->select->back ? selmon->select->back : g->clients->clients[selmon->tag-1]->client_tail;
-	else if(args.i == 1)
-		temp = selmon->select->next ? selmon->select->next : g->clients->clients[selmon->tag-1]->client_head;
-	else return;	
+	
+	if(selmon->select){
+		if(args.i == -1)
+			temp = selmon->select->back ? selmon->select->back : g->clients->clients[selmon->tag-1]->client_tail;
+		else if(args.i == 1)
+			temp = selmon->select->next ? selmon->select->next : g->clients->clients[selmon->tag-1]->client_head;
+		else return;
+	}
+	else if(!selmon->select && (args.i == -1 || args.i == 1))
+		temp = g->clients->clients[selmon->tag-1]->client_head;
+
 	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
 	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut
 	XWarpPointer(g->dpy, None, temp->win,
-			     0, 0, 0, 0,
-			     temp->width / 2, temp->height /2);
+				0, 0, 0, 0,
+				temp->width / 2, temp->height /2);
 	manager->focus(temp);
 }
 
 void Functions::changeworkspace(const Arg &args){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
-	auto &manager = g->man;
+
+	if(selmon->tag == (unsigned int)args.i) return;
 
 	ClientTG *current_tag;
 	Client *temp;
@@ -146,8 +151,8 @@ void Functions::changeworkspace(const Arg &args){
 	current_tag = g->clients->clients[selmon->tag-1];
 	map_or_unmap("unmap");
 
+	// Update selmon tag status
 	selmon->tag = args.i;
 	current_tag = g->clients->clients[selmon->tag-1];
 	map_or_unmap("map");
-	manager->focus(current_tag->client_head);
 }
