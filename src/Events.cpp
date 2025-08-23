@@ -8,9 +8,10 @@ Events::Events(Variables *global) : global(global){
 void Events::keypress(XKeyEvent &event){
 	auto &g = this->global;
 	auto &functions = g->func;
+	auto &config = g->config;
 	
 	KeySym sym = XKeycodeToKeysym(g->dpy, (KeyCode)event.keycode, 0);
-	for(const Key &key : g->config->keys)
+	for(const Key &key : config->keys)
 		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN   : functions->spawn(key.args);break;
@@ -24,8 +25,9 @@ void Events::keypress(XKeyEvent &event){
 void Events::buttonpress(XButtonEvent &event){
 	auto &g = this->global;
 	auto &functions = g->func;
+	auto &config = g->config;
 	
-	for(const Button &button : g->config->buttons)
+	for(const Button &button : config->buttons)
 		if(button.mod == event.state && button.button == event.button)
 			switch(button.code){
 				case MOVRESZ  : functions->movresz(button.args);break;

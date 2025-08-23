@@ -101,10 +101,11 @@ void Manager::run(){
 
 void Manager::grabbuttons(Window &w){
 	auto &g = this->global;
+	auto &config = g->config;
 	
 	/* Grab buttons */
 	XUngrabButton(g->dpy, AnyButton, AnyModifier, w);
-	for(const Button &button : g->config->buttons)
+	for(const Button &button : config->buttons)
 		XGrabButton(g->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 

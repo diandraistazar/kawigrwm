@@ -26,16 +26,18 @@ void ClientList::assign(Client *c, Window w, XWindowAttributes &wa, Monitor *sel
 
 void ClientList::cleanup(){
 	auto &g = this->global;
+	auto &config = g->config;
 
-	ClientTG *current_tag = clients[g->selmon->tag-1];
-	Client *temp = nullptr;
-	while(current_tag->client_head){
-		temp = current_tag->client_head->next;
-		delete current_tag->client_head;
-		current_tag->client_head = temp;
+	for(int workspace = config->tags-1; workspace >= 0; workspace--){
+		ClientTG *current_tag = clients[workspace];
+		while(current_tag->client_head){
+			Client *temp = current_tag->client_head->next;
+			delete current_tag->client_head;
+			current_tag->client_head = temp;
+		}
+		delete current_tag;
+		clients.pop_back();
 	}
-	current_tag->client_head = nullptr;
-	current_tag->client_head = nullptr;
 }
 
 Client *ClientList::createNewClient(){
@@ -87,8 +89,9 @@ void ClientList::deleteClient(Client *c){
 
 void ClientList::display(){
 	auto &g = this->global;
+	auto &config = g->config;
 
-	for(unsigned int workspace = 0; workspace < g->config->tags; workspace++){
+	for(unsigned int workspace = 0; workspace < config->tags; workspace++){
 		ClientTG *current_tag = clients[workspace];
 		Client *client;
 		debugme("Workspace %d\n", workspace);

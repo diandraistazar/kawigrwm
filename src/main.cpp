@@ -22,5 +22,6 @@ int main(){
 	wm.run(); 
 	wm.cleanup(); 
 	wm.close();
+	debugme("Program closed\n");
 	return EXIT_SUCCESS;
 }

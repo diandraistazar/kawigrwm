@@ -135,8 +135,9 @@ void Functions::adjustfocus(const Arg &args){
 void Functions::changeworkspace(const Arg &args){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
+	auto &config = g->config;
 
-	if(selmon->tag == (unsigned int)args.i) return;
+	if(selmon->tag == (unsigned int)args.i || (unsigned int)args.i > config->tags) return;
 
 	ClientTG *current_tag;
 	Client *temp;
