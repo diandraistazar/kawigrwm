@@ -137,10 +137,22 @@ void Functions::changeworkspace(const Arg &args){
 	auto &selmon = g->selmon;
 	auto &config = g->config;
 
-	if(selmon->tag == (unsigned int)args.i || (unsigned int)args.i > config->tags) return;
+	// Saya tahu errornya, args sendiri merupakan union yang mana hanya salah satu variabelnya saja yang dapat diakses
+	// Statement dibawah, mencoba untuk mengakses variabel lain yang tidak di generate, maka terjadi segmentation fault
 
 	ClientTG *current_tag;
 	Client *temp;
+	unsigned int tag_temp = selmon->tag;
+	
+	if(!strcmp((const char*)args.s, "left"))
+		tag_temp -= 1;
+	else if(!strcmp((const char*)args.s, "rigth"))
+		tag_temp += 1;
+
+	if( tag_temp == selmon->tag
+	   || tag_temp < 1
+	   || tag_temp > config->tags) return;
+
 	auto map_or_unmap = [&temp, &current_tag, &g](const std::string &arg){
 		for(temp = current_tag->client_head; temp; temp = temp->next)
 			if(arg == "map")
@@ -152,8 +164,8 @@ void Functions::changeworkspace(const Arg &args){
 	current_tag = g->clients->clients[selmon->tag-1];
 	map_or_unmap("unmap");
 
-	// Update selmon tag status
-	selmon->tag = args.i;
-	current_tag = g->clients->clients[selmon->tag-1];
+	current_tag = g->clients->clients[tag_temp-1];
 	map_or_unmap("map");
+
+	selmon->tag = tag_temp;
 }

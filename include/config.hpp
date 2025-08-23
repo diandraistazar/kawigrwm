@@ -7,18 +7,20 @@ const unsigned int tags = 2;
 #define SHIFT  ShiftMask
 
 #define SPAWN(a) { .v = (const void*[]){"sh", "-c", (a), NULL} }
+#define STR(a) { .s = (const void*)(a) }
+#define INT(a) { .i = (a) }
 
 /* Keyboard keybind */
 // ! please, use lower case for keysym
 const std::vector<Key> keys = {
-// mod        keysym    code   arg
-	{MOD,      XK_Return,SPAWN,  SPAWN("alacritty")},
-	{MOD,      XK_j,     FOCUS,  { .i = -1 }},
-	{MOD,      XK_k,     FOCUS,  { .i = 1 }},
-	{MOD,      XK_1,     CHGWORK,{ .i = 1 } },
-	{MOD,      XK_2,     CHGWORK,{ .i = 2 } },
-	{MOD|SHIFT,XK_q,     KILL,   {0} },
-	{MOD|SHIFT,XK_e,     EXIT,   {0} },
+// mod         keysym           code	 arg
+	{MOD,      XK_Return,       SPAWN,   SPAWN("alacritty")},
+	{MOD,      XK_j,            FOCUS,   INT(-1)},
+	{MOD,      XK_k,            FOCUS,   INT(1)},
+	{MOD,      XK_bracketleft,  CHGWORK, STR("left")},
+	{MOD,      XK_bracketright, CHGWORK, STR("rigth")},
+	{MOD|SHIFT,XK_q,            KILL,    {0} },
+	{MOD|SHIFT,XK_e,            EXIT,    {0} },
 };
 
 const std::vector<Button> buttons = {

@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <cstring>
 #include <unistd.h>
 
 template <typename... Args>
@@ -20,6 +21,7 @@ enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK };
 /* Arg */
 union Arg{
 	const void **v;
+	const void *s;
 	const int i;
 	const float f;
 };
