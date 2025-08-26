@@ -171,3 +171,21 @@ void Functions::changeworkspace(const Arg &args){
 
 	selmon->tag = tag_temp;
 }
+
+void Functions::move_win_to_another_workspace(const Arg &args){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	auto &config = g->config;
+	auto &clients = g->clients;
+
+	// checking
+	if((unsigned int)args.i == selmon->tag
+	   || (unsigned int)args.i > config->tags
+	   || (unsigned int)args.i < 1
+	   || (unsigned int)args.i-1 > clients->clients.size()
+	   || !selmon->select)
+		return;
+
+	g->clients->moveClientToAnotherTag(selmon->select, (unsigned int)args.i);
+	XUnmapWindow(g->dpy, selmon->select->win);
+}

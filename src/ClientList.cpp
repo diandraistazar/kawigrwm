@@ -87,6 +87,15 @@ void ClientList::deleteClient(Client *c){
 	delete temp;
 }
 
+void ClientList::moveClientToAnotherTag(Client *select, unsigned int which_tag){
+	ClientTG *source_tag = clients[select->tag-1];
+	ClientTG *dest_tag = clients[which_tag-1];
+
+	select->tag = which_tag;
+	removeClientFromTag(select, source_tag);
+	addClientToTag(select, dest_tag);
+}
+
 void ClientList::display(){
 	auto &g = this->global;
 	auto &config = g->config;
@@ -99,4 +108,35 @@ void ClientList::display(){
 			debugme("client_tag: %d\n", client->tag);
 		}
 	}
+}
+
+void ClientList::removeClientFromTag(Client *select, ClientTG *tagsel){
+	Client *back, *next;
+
+	if(!tagsel || !tagsel->client_head) return;
+
+	back = select->back;
+	next = select->next;
+
+	if(back) back->next = next;
+	else tagsel->client_head = next;
+
+	if(next) next->back = back;
+	else tagsel->client_tail = back;
+
+	select->back = nullptr;
+	select->next = nullptr;
+}
+
+void ClientList::addClientToTag(Client *select, ClientTG *tagsel){
+	if(!tagsel) return;
+
+	if(tagsel->client_head){
+		tagsel->client_tail->next = select;
+		select->back = tagsel->client_tail;
+	}
+	else
+		tagsel->client_head = select;
+
+	tagsel->client_tail = select;
 }

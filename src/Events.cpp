@@ -15,9 +15,10 @@ void Events::keypress(XKeyEvent &event){
 		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN   : functions->spawn(key.args);break;
-				case KILL    : functions->kill();break;
 				case FOCUS   : functions->adjustfocus(key.args);break;
+				case MOVWIN  : functions->move_win_to_another_workspace(key.args);break;
 				case CHGWORK : functions->changeworkspace(key.args);break;
+				case KILL    : functions->kill();break;
 				case EXIT    : functions->exitman();break;
 			}
 }

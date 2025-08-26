@@ -17,7 +17,7 @@ void debugme(const char* massage, Args... args){
 }
 
 /* Enum */
-enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN };
 /* Arg */
 union Arg{
 	const void **v;
@@ -120,7 +120,7 @@ void kill();
 void movresz(const Arg &args);
 void adjustfocus(const Arg &args);
 void changeworkspace(const Arg &args);
-
+void move_win_to_another_workspace(const Arg &args);
 };
 
 /* ClientList */
@@ -135,5 +135,9 @@ void cleanup();
 Client *createNewClient();
 Client *findClient(Window w);
 void deleteClient(Client *c);
+void moveClientToAnotherTag(Client *select, unsigned int which_tag);
 void display();
+private:
+void removeClientFromTag(Client *select, ClientTG *tagsel);
+void addClientToTag(Client *select, ClientTG *dest_tag);
 };
