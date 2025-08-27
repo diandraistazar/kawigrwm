@@ -4,7 +4,7 @@
 	// allow spawn window (DONE)
 	// allow move window (DONE)
 	// allow resize window (DONE)
-	// allow change another workspace (tags)
+	// allow change another workspace (tags) (DONE)
 // allow adjust focus window, even with pointer (DONE)
 // Dynamic Manager (Tiling and stack)
 // be minimalist and fast
@@ -13,9 +13,11 @@
 
 /* Main functions */
 int main(){
-	Manager wm;
+	std::unique_ptr<Variables> global = std::make_unique<Variables>();
+	
+	Manager wm(global.get());
 	if (!wm.open()){
-		wm.err_mass("Can't open X display");
+		wm.err_msg("Can't open X display");
 		return EXIT_FAILURE;
 	}
 	wm.init();

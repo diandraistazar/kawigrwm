@@ -8,15 +8,17 @@ Functions::Functions(Variables *global) : global(global){
 void Functions::spawn(const Arg &args){
 	auto &manager = this->global->man;
 	
+	const char *string[] = { "sh", "-c", (char*)args.s, nullptr };
 	pid_t pid = fork();
 	if(pid == 0){
-		execvp((char*)args.v[0], (char**)args.v);
-		manager->err_mass("Can't open the program");
+		execvp(string[0], (char**)string);
+		manager->err_msg("Can't open the program");
 	}
 }
 
 void Functions::exitman(){
-	this->global->running = false;
+	auto &g = this->global;
+	g->running = false;
 }
 
 void Functions::kill(){
@@ -30,7 +32,7 @@ void Functions::kill(){
 	manager->unmanage(selmon->select);
 }
 
-void Functions::movresz(const Arg &args){
+void Functions::move_and_resize_window(const Arg &args){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
 	
@@ -48,44 +50,39 @@ void Functions::movresz(const Arg &args){
 	Window dummy_w;
 	std::function<void()> selected;
 	
-	/*move window*/
-	if(args.i == -1){
-		selected = [&g, &selmon, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &event](){
-		x_temp = event.xmotion.x_root - x_root_temp;
-		y_temp = event.xmotion.y_root - y_root_temp;
+	switch(args.i){
+		case -1: // Move Window
+			selected = [&g, &selmon, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &event](){
+			x_temp = event.xmotion.x_root - x_root_temp;
+			y_temp = event.xmotion.y_root - y_root_temp;
 		
-		x_root_temp = event.xmotion.x_root;
-		y_root_temp = event.xmotion.y_root;
+			x_root_temp = event.xmotion.x_root;
+			y_root_temp = event.xmotion.y_root;
 
-		selmon->select->x += x_temp;
-		selmon->select->y += y_temp;
-		XMoveWindow(g->dpy, selmon->select->win,
-		            selmon->select->x,
-		            selmon->select->y);
- 	 	};
-	 }
-	 /*resize window*/
-	 else if(args.i == 1){
-		selected = [&g, &selmon, &event, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &width_temp, &height_temp](){
-		x_temp = event.xmotion.x_root - x_root_temp;
-		y_temp = event.xmotion.y_root - y_root_temp;
+			selmon->select->x += x_temp;
+			selmon->select->y += y_temp;
+			XMoveWindow(g->dpy, selmon->select->win, selmon->select->x, selmon->select->y);
+			}; break;
+		case 1: // Resize Window
+			selected = [&g, &selmon, &event, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &width_temp, &height_temp](){
+			x_temp = event.xmotion.x_root - x_root_temp;
+			y_temp = event.xmotion.y_root - y_root_temp;
 
-		x_root_temp = event.xmotion.x_root;
-		y_root_temp = event.xmotion.y_root;
+			x_root_temp = event.xmotion.x_root;
+			y_root_temp = event.xmotion.y_root;
 
-		width_temp = selmon->select->width;
-		height_temp = selmon->select->height;
+			width_temp = selmon->select->width;
+			height_temp = selmon->select->height;
 	
-		/*below are ternary operator*/
-		((width_temp += x_temp) > 100) ? selmon->select->width = width_temp : 0;
-		((height_temp += y_temp) > 100) ? selmon->select->height = height_temp : 0;
+			width_temp += x_temp;
+			height_temp += y_temp;
+			
+			if(width_temp > 100) selmon->select->width = width_temp;
+			if(height_temp > 100) selmon->select->height = height_temp;
 		
-		XResizeWindow(g->dpy, selmon->select->win,
-		              selmon->select->width,
-		              selmon->select->height);
-		};
-	 }
-	 else return;
+			XResizeWindow(g->dpy, selmon->select->win, selmon->select->width, selmon->select->height);
+			}; break;
+	}
 	 
 	XQueryPointer(g->dpy, g->root, &dummy_w, &dummy_w, &x_root_temp, &y_root_temp, &dummy_i, &dummy_i, &maskval);
 	XGrabPointer(g->dpy, g->root, false,
@@ -98,7 +95,6 @@ void Functions::movresz(const Arg &args){
 	case MotionNotify:
 		if((event.xmotion.time - lasttime) <= 12)
 			continue;
-
 		lasttime = event.xmotion.time;
 		selected();
 		break;
@@ -107,68 +103,56 @@ void Functions::movresz(const Arg &args){
 	XUngrabPointer(g->dpy, CurrentTime);	
 }
 
-void Functions::adjustfocus(const Arg &args){
+void Functions::adjust_focus(const Arg &args){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
 	auto &manager = g->man;
 	
 	Client *temp = nullptr;
 	
-	if(selmon->select){
-		if(args.i == -1)
-			temp = selmon->select->back ? selmon->select->back : g->clients->clients[selmon->tag-1]->client_tail;
-		else if(args.i == 1)
-			temp = selmon->select->next ? selmon->select->next : g->clients->clients[selmon->tag-1]->client_head;
-		else return;
-	}
-	else if(!selmon->select && (args.i == -1 || args.i == 1))
+	if(!selmon->select && (args.i == -1 || args.i == 1))
 		temp = g->clients->clients[selmon->tag-1]->client_head;
+	else
+		switch(args.i){
+			case -1:
+				temp = selmon->select->back ? selmon->select->back : g->clients->clients[selmon->tag-1]->client_tail;
+				break;
+			case 1:
+				temp = selmon->select->next ? selmon->select->next : g->clients->clients[selmon->tag-1]->client_head;
+				break;
+			default: return;
+		}
 
 	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
 	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut
-	XWarpPointer(g->dpy, None, temp->win,
-				0, 0, 0, 0,
-				temp->width / 2, temp->height /2);
+	XWarpPointer(g->dpy, None, temp->win, 0, 0, 0, 0, temp->width / 2, temp->height /2);
 	manager->focus(temp);
 }
 
-void Functions::changeworkspace(const Arg &args){
+void Functions::change_workspace(const Arg &args){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
+	auto &manager = g->man;
+	auto &clients = g->clients;
 	auto &config = g->config;
 
-	// Saya tahu errornya, args sendiri merupakan union yang mana hanya salah satu variabelnya saja yang dapat diakses
-	// Statement dibawah, mencoba untuk mengakses variabel lain yang tidak di generate, maka terjadi segmentation fault
-
-	ClientTG *current_tag;
-	Client *temp;
 	unsigned int tag_temp = selmon->tag;
 	
-	if(args.i == -1)
-		tag_temp -= 1;
-	else if(args.i == -2)
-		tag_temp += 1;
-	else if(args.i >= 1 && args.i <= (int)config->tags)
-		tag_temp = args.i;
+	switch(args.i){
+		case -2: tag_temp -= 1;
+			break;
+		case -1: tag_temp += 1;
+			break;
+		default: tag_temp = args.i;
+			break;
+	}
 
-	if( tag_temp == selmon->tag
+	if(tag_temp == selmon->tag
 	   || tag_temp < 1
 	   || tag_temp > config->tags) return;
 
-	auto map_or_unmap = [&temp, &current_tag, &g](const std::string &arg){
-		for(temp = current_tag->client_head; temp; temp = temp->next)
-			if(arg == "map")
-				XMapWindow(g->dpy, temp->win);
-			else if(arg == "unmap")
-				XUnmapWindow(g->dpy, temp->win);
-	};
-
-	current_tag = g->clients->clients[selmon->tag-1];
-	map_or_unmap("unmap");
-
-	current_tag = g->clients->clients[tag_temp-1];
-	map_or_unmap("map");
-
+	manager->map_or_unmap("unmap", clients->clients[selmon->tag-1]);
+	manager->map_or_unmap("map", clients->clients[tag_temp-1]);
 	selmon->tag = tag_temp;
 }
 

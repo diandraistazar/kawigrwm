@@ -1,27 +1,22 @@
 #include "../include/main.hpp"
 
 /* ClientList */
-ClientList::ClientList(Variables *global){
+ClientList::ClientList(Variables *global) : global(global){
 	auto &g = this->global;
 	
-	this->global = global;
-	
-	ClientTG *temp;
-	for(unsigned int index = 0; index < g->config->tags; index++){
-		temp = new ClientTG;
-		clients.push_back(temp);
-	}
+	for(int index = g->config->tags; index > 0; index--)
+		clients.push_back(new ClientTG);
 }
 
 void ClientList::assign(Client *c, Window w, XWindowAttributes &wa, Monitor *selmon){
 	if(!c) return;
-	c->win = w;
-	c->root = wa.root;
 	c->x = wa.x;
 	c->y = wa.y;
+	c->win = w;
 	c->width = wa.width;
 	c->height = wa.height;
 	c->tag = selmon->tag;
+	c->root = wa.root;
 }
 
 void ClientList::cleanup(){
@@ -46,45 +41,22 @@ Client *ClientList::createNewClient(){
 	ClientTG *current_tag = clients[g->selmon->tag-1];
 	Client *new_client = new Client;
 	
-	if(current_tag->client_head){
-		current_tag->client_tail->next = new_client;
-		new_client->back = current_tag->client_tail;
-	}
-	else 
-		current_tag->client_head = new_client;
-
-	current_tag->client_tail = new_client;
+	addClientToTag(new_client, current_tag);
 	return new_client;
 }
 
-Client *ClientList::findClient(Window w){
-	auto &g = this->global;
-
-	ClientTG *current_tag = clients[g->selmon->tag-1];
-	Client *temp = nullptr;
-	
-	for(temp = current_tag->client_head; temp; temp = temp->next)
+Client *ClientList::findClient(Window w, ClientTG *current_tag){
+	for(Client *temp = current_tag->client_head; temp; temp = temp->next)
 			if(temp->win == w) return temp;
 	return nullptr;
 }
 
 void ClientList::deleteClient(Client *c){
 	auto &g = this->global;
+	
 	ClientTG *current_tag = clients[g->selmon->tag-1];
-	Client *back, *next, *temp;
-
-	if(!current_tag->client_head) return;
-	
-	for(temp = current_tag->client_head; temp && temp != c; temp = temp->next);
-	back = temp->back; next = temp->next;
-	
-	if(next) next->back = back;
-	else current_tag->client_tail = back;
-
-	if(back) back->next = next;
-	else current_tag->client_head = next;
-
-	delete temp;
+	removeClientFromTag(c, current_tag);
+	delete c;
 }
 
 void ClientList::moveClientToAnotherTag(Client *select, unsigned int which_tag){
@@ -110,6 +82,7 @@ void ClientList::display(){
 	}
 }
 
+/* Private */
 void ClientList::removeClientFromTag(Client *select, ClientTG *tagsel){
 	Client *back, *next;
 

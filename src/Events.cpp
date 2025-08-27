@@ -15,9 +15,9 @@ void Events::keypress(XKeyEvent &event){
 		if(key.mod == event.state && key.keysym == sym)
 			switch(key.code){
 				case SPAWN   : functions->spawn(key.args);break;
-				case FOCUS   : functions->adjustfocus(key.args);break;
+				case FOCUS   : functions->adjust_focus(key.args);break;
 				case MOVWIN  : functions->move_win_to_another_workspace(key.args);break;
-				case CHGWORK : functions->changeworkspace(key.args);break;
+				case CHGWORK : functions->change_workspace(key.args);break;
 				case KILL    : functions->kill();break;
 				case EXIT    : functions->exitman();break;
 			}
@@ -31,24 +31,26 @@ void Events::buttonpress(XButtonEvent &event){
 	for(const Button &button : config->buttons)
 		if(button.mod == event.state && button.button == event.button)
 			switch(button.code){
-				case MOVRESZ  : functions->movresz(button.args);break;
+				case MOVRESZ  : functions->move_and_resize_window(button.args);break;
 			}
 }
 
 void Events::maprequest(XMapRequestEvent &event){
 	auto &g = this->global;
 	auto &manager = g->man;
+	auto &clients = g->clients;
 	
-	if(!g->clients->findClient(event.window))
+	if(!g->clients->findClient(event.window, clients->clients[g->selmon->tag-1]))
 		manager->manage(event.window);
 }
 
 void Events::destroynotify(XDestroyWindowEvent &event){
 	auto &g = this->global;
 	auto &manager = g->man;
+	auto &clients = g->clients;
 	
 	Client *c = nullptr;
-	if((c = g->clients->findClient(event.window)))
+	if((c = g->clients->findClient(event.window, clients->clients[g->selmon->tag-1])))
 		manager->unmanage(c);
 }
 
@@ -56,11 +58,12 @@ void Events::enternotify(XCrossingEvent &event){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
 	auto &manager = g->man;
+	auto &clients = g->clients;
 	
-	Client *c = nullptr;
-	if(selmon->select && event.window == selmon->select->win) return;
+	Client *c;
+	if(selmon->select && (event.window == selmon->select->win)) return;
 	c = event.window != g->root
-		? g->clients->findClient(event.window)
+		? g->clients->findClient(event.window, clients->clients[g->selmon->tag-1])
 		: nullptr;
 	manager->focus(c);
 }

@@ -7,5 +7,5 @@ SRC = ${P_SRC}main.cpp ${P_SRC}Manager.cpp ${P_SRC}Events.cpp ${P_SRC}Functions.
 OUT = ${NAME}
 LIBS = -lX11
 
-CPPFLAGS = -s -Wall -std=c++17 -D VERSION=\"${VERSION}\" -D NAME=\"${NAME}\" -O3 -Wno-deprecated-declarations
+CPPFLAGS = -s -Wall -std=c++17 -D VERSION=\"${VERSION}\" -D NAME=\"${NAME}\" -Os -Wno-deprecated-declarations
 

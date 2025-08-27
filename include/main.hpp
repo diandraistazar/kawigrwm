@@ -20,7 +20,6 @@ void debugme(const char* massage, Args... args){
 enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN };
 /* Arg */
 union Arg{
-	const void **v;
 	const void *s;
 	const int i;
 	const float f;
@@ -80,10 +79,11 @@ struct Variables{
 /* ## Forward Decleration ## */
 /* Manager class */
 class Manager{
+private:
+Variables *global;
 public:
-std::unique_ptr<Variables> global;
-Manager();
-void err_mass(const std::string &massage);
+Manager(Variables *global);
+void err_msg(const std::string &massage);
 Display *open();
 void init();
 void cleanup();
@@ -93,6 +93,7 @@ void grabbuttons(Window &w);
 void manage(Window &w);
 void unmanage(Client *c);
 void focus(Client *c);
+void map_or_unmap(std::string opt, ClientTG *which_tag);
 };
 
 /* Events class */
@@ -117,9 +118,9 @@ Functions(Variables *global);
 void spawn(const Arg &args);
 void exitman();
 void kill();
-void movresz(const Arg &args);
-void adjustfocus(const Arg &args);
-void changeworkspace(const Arg &args);
+void move_and_resize_window(const Arg &args);
+void adjust_focus(const Arg &args);
+void change_workspace(const Arg &args);
 void move_win_to_another_workspace(const Arg &args);
 };
 
@@ -133,7 +134,7 @@ ClientList(Variables *global);
 void assign(Client *c, Window w, XWindowAttributes &wa, Monitor *selmon);
 void cleanup();
 Client *createNewClient();
-Client *findClient(Window w);
+Client *findClient(Window w, ClientTG *current_tag);
 void deleteClient(Client *c);
 void moveClientToAnotherTag(Client *select, unsigned int which_tag);
 void display();

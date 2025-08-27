@@ -6,15 +6,15 @@ const unsigned int tags = 2;
 #define ALT    Mod1Mask
 #define SHIFT  ShiftMask
 
-#define SPAWN(a) { .v = (const void*[]){"sh", "-c", (a), NULL} }
 #define STR(a) { .s = (const void*)(a) }
 #define INT(a) { .i = (a) }
+#define FLT(a) { .f = (a) }
 
 /* Keyboard keybind */
 // ! please, use lower case for keysym
 const std::vector<Key> keys = {
 // mod         keysym           code	 arg
-	{MOD,      XK_Return,       SPAWN,   SPAWN("alacritty")},
+	{MOD,      XK_Return,       SPAWN,   STR("alacritty")},
 	{MOD,      XK_j,            FOCUS,   INT(-1)},
 	{MOD,      XK_k,            FOCUS,   INT(1)},
 	

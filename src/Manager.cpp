@@ -1,20 +1,16 @@
 #include "../include/main.hpp"
 
 /* Manager class */
-Manager::Manager(){
-	using std::make_unique;
-	auto &g = this->global;
-	
-	g = make_unique<Variables>();
+Manager::Manager(Variables *global) : global(global){
+	// no statement for now
 }
 
-void Manager::err_mass(const std::string &massage){
+void Manager::err_msg(const std::string &massage){
 	std::cerr << NAME << "-" << VERSION << ": "\
 	<< massage << std::endl;
 }
 
 Display *Manager::open(){
-	using std::make_unique;
 	auto &g = this->global;
 	
 	g->dpy = XOpenDisplay(nullptr);
@@ -32,15 +28,15 @@ void Manager::init(){
 	// Assign this object
 	g->man = this;
 	// Create Functions and Events memory
-	g->func = make_unique<Functions>(g.get());
-	g->event = make_unique<Events>(g.get());
+	g->func = make_unique<Functions>(g);
+	g->event = make_unique<Events>(g);
 	
 	// Create config memory
 	g->config = make_unique<Configuration>();
 
 	// Create selmon memory
 	g->selmon = make_unique<Monitor>();
-	g->clients = make_unique<ClientList>(g.get());
+	g->clients = make_unique<ClientList>(g);
 
 	// Assignment some important things
 	g->root = DefaultRootWindow(g->dpy);
@@ -78,7 +74,6 @@ void Manager::cleanup(){
 
 void Manager::close(){
 	auto &g = this->global;
-	
 	XCloseDisplay(g->dpy);
 }
 
@@ -111,12 +106,13 @@ void Manager::grabbuttons(Window &w){
 
 void Manager::manage(Window &w){
 	auto &g = this->global;
+	auto &clients = g->clients;
 	
 	XWindowAttributes wa;
 	Client *temp = g->clients->createNewClient();
 	
 	XGetWindowAttributes(g->dpy, w, &wa);
-	g->clients->assign(temp, w, wa, g->selmon.get());
+	clients->assign(temp, w, wa, g->selmon.get());
 	XSelectInput(g->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
 	XMapWindow(g->dpy, w);
 	XSync(g->dpy, false);
@@ -129,7 +125,6 @@ void Manager::unmanage(Client *c){
 	
 	focus(c->back ? c->back : c->next);
 	g->clients->deleteClient(c);
-	XSync(g->dpy, false);
 }
 
 void Manager::focus(Client *c){
@@ -145,4 +140,12 @@ void Manager::focus(Client *c){
 		XSetInputFocus(g->dpy, g->root, RevertToPointerRoot, CurrentTime);
 	}
 	selmon->select = c;
+}
+
+void Manager::map_or_unmap(std::string opt, ClientTG *which_tag){
+	auto &g = this->global;
+
+	for(Client *current = which_tag->client_head; current; current = current->next)
+		if(opt == "map") XMapWindow(g->dpy, current->win);
+		else if(opt == "unmap") XUnmapWindow(g->dpy, current->win);
 }
