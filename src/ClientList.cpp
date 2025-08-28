@@ -4,7 +4,7 @@
 ClientList::ClientList(Variables *global) : global(global){
 	auto &g = this->global;
 	
-	for(int index = g->config->tags; index > 0; index--)
+	for(int index = g->config->tags; index; index--)
 		clients.push_back(new ClientTG);
 }
 
@@ -99,6 +99,7 @@ void ClientList::removeClientFromTag(Client *select, ClientTG *tagsel){
 
 	select->back = nullptr;
 	select->next = nullptr;
+	tagsel->count--;
 }
 
 void ClientList::addClientToTag(Client *select, ClientTG *tagsel){
@@ -112,4 +113,5 @@ void ClientList::addClientToTag(Client *select, ClientTG *tagsel){
 		tagsel->client_head = select;
 
 	tagsel->client_tail = select;
+	tagsel->count++;
 }

@@ -2,7 +2,7 @@
 
 /* Manager class */
 Manager::Manager(Variables *global) : global(global){
-	// no statement for now
+    // no statement for now
 }
 
 void Manager::err_msg(const std::string &massage){
@@ -30,6 +30,7 @@ void Manager::init(){
 	// Create Functions and Events memory
 	g->func = make_unique<Functions>(g);
 	g->event = make_unique<Events>(g);
+	g->layout = make_unique<Layout>(g);
 	
 	// Create config memory
 	g->config = make_unique<Configuration>();
@@ -40,7 +41,10 @@ void Manager::init(){
 
 	// Assignment some important things
 	g->root = DefaultRootWindow(g->dpy);
-	g->selmon->tag = 1; // default tag
+	g->screen = DefaultScreen(g->dpy);
+	g->width_m = DisplayWidth(g->dpy, g->screen);
+	g->height_m = DisplayHeight(g->dpy, g->screen);
+	g->selmon->tag = g->config->default_tag; // default tag
 	
 	/* Grab Keys */
 	// Yang Dilakukan, untuk mengambil dan mengetahui rentang keycodes yang dapat digunakan nantinya di grab
@@ -118,6 +122,7 @@ void Manager::manage(Window &w){
 	XSync(g->dpy, false);
 	grabbuttons(temp->win);
 	focus(temp);
+	arrange_window();
 }
 
 void Manager::unmanage(Client *c){
@@ -125,6 +130,7 @@ void Manager::unmanage(Client *c){
 	
 	focus(c->back ? c->back : c->next);
 	g->clients->deleteClient(c);
+	arrange_window();
 }
 
 void Manager::focus(Client *c){
@@ -149,3 +155,18 @@ void Manager::map_or_unmap(std::string opt, ClientTG *which_tag){
 		if(opt == "map") XMapWindow(g->dpy, current->win);
 		else if(opt == "unmap") XUnmapWindow(g->dpy, current->win);
 }
+
+void Manager::arrange_window(){
+	auto &g = this->global;
+	auto &selmon = g->selmon;
+	auto &clients = g->clients;
+	auto &layout = g->layout;
+	
+	ClientTG *current_tag = clients->clients[selmon->tag-1];
+
+
+	if(current_tag->count <= 0) return;
+	
+	layout->tiling_1(selmon.get(), current_tag);
+}
+

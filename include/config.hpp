@@ -1,4 +1,5 @@
 struct Configuration{
+unsigned int default_tag = 1;
 const unsigned int tags = 2;
 
 /* Modifers */

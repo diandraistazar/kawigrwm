@@ -58,17 +58,21 @@ struct Client{
 struct ClientTG{
 	Client *client_head = nullptr;
 	Client *client_tail = nullptr;
+	unsigned int count;
 };
-class Manager; class Events; class Functions;
+class Manager; class Events; class Functions; class Layout;
 struct Configuration;
 struct Variables{
 	Display *dpy;
 	Window root = None;
+	int screen;
+	int width_m, height_m;
 	bool running = true;
 	Manager *man;
 	std::unique_ptr<Functions> func;
 	std::unique_ptr<Events> event;
 	std::unique_ptr<Monitor> selmon;
+	std::unique_ptr<Layout> layout;
 	std::unique_ptr<ClientList> clients;
 	std::unique_ptr<Configuration> config;
 };
@@ -94,6 +98,16 @@ void manage(Window &w);
 void unmanage(Client *c);
 void focus(Client *c);
 void map_or_unmap(std::string opt, ClientTG *which_tag);
+void arrange_window();
+};
+
+/* Layout */
+class Layout{
+private:
+Variables *global;
+public:
+Layout(Variables *global);
+void tiling_1(Monitor *selmon, ClientTG *tagsel);
 };
 
 /* Events class */
