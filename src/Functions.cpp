@@ -154,10 +154,12 @@ void Functions::change_workspace(const Arg &args){
 	manager->map_or_unmap("unmap", clients->clients[selmon->tag-1]);
 	manager->map_or_unmap("map", clients->clients[tag_temp-1]);
 	selmon->tag = tag_temp;
+	manager->arrange_window();
 }
 
 void Functions::move_win_to_another_workspace(const Arg &args){
 	auto &g = this->global;
+	auto &manager = g->man;
 	auto &selmon = g->selmon;
 	auto &config = g->config;
 	auto &clients = g->clients;
@@ -172,6 +174,7 @@ void Functions::move_win_to_another_workspace(const Arg &args){
 
 	g->clients->moveClientToAnotherTag(selmon->select, (unsigned int)args.i);
 	XUnmapWindow(g->dpy, selmon->select->win);
+	manager->arrange_window();
 }
 
 void Functions::change_layout(const Arg &args){
