@@ -4,20 +4,21 @@ Layout::Layout(Variables *global) : global(global){
 	// no statement for now
 }
 
-// Tiling like i3-wm
-void Layout::tiling_1(Monitor *selmon, ClientTG *tagsel){
+void Layout::horizontal_tiling(Monitor *selmon, ClientTG *tagsel){
 	auto &g = this->global;
 
-	int i = 0, point = 0;
+	int base = g->width_m / tagsel->count;
+	int remains = g->width_m % tagsel->count;
+	int i = 0;
 
 	for(Client *selected = tagsel->client_head; selected; selected = selected->next){
-		selected->width = g->width_m / tagsel->count + g->width_m % tagsel->count;
+		selected->width = base + ((int)tagsel->count == i+1 ? remains : 0);
 		selected->height = g->height_m;
-
-		point = selected->width * i;
-		selected->x = point;
+		
+		selected->x = base * i;
 		selected->y = 0;
-		i += 1;
+
+		i++;
 		XMoveResizeWindow(g->dpy, selected->win, selected->x, selected->y, selected->width, selected->height);
 	}
 }

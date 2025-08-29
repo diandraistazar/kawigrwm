@@ -167,6 +167,6 @@ void Manager::arrange_window(){
 
 	if(current_tag->count <= 0) return;
 	
-	layout->tiling_1(selmon.get(), current_tag);
+	layout->horizontal_tiling(selmon.get(), current_tag);
 }
 
