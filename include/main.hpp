@@ -108,6 +108,7 @@ Variables *global;
 public:
 Layout(Variables *global);
 void horizontal_tiling(Monitor *selmon, ClientTG *tagsel);
+void vertical_tiling(Monitor *selmon, ClientTG *tagsel);
 };
 
 /* Events class */
