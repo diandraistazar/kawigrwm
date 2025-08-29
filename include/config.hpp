@@ -1,8 +1,12 @@
 using std::vector;
 
 struct Configuration{
+/* Gaps */
+unsigned int gaps = 8;
+
+/* Tags */
 const unsigned int default_tag = 1;
-const unsigned int tags = 2;
+const unsigned int tags = 10;
 
 /*Layouts*/
 const LayoutCODE default_layout = TILING_HORIZONTAL;
@@ -32,14 +36,21 @@ const vector<Key> keys = {
 	
 	// Spawn program
 	{MOD,      XK_Return,       SPAWN,   STR("alacritty")},
+	{0,        XK_F9,           SPAWN,   STR("do-it.sh volume dec")},
+	{0,        XK_F10,          SPAWN,   STR("do-it.sh volume inc")},
+	{MOD|SHIFT,XK_F10,          SPAWN,   STR("do-it.sh volume mute")},
+	{0,        XK_F7,           SPAWN,   STR("do-it.sh brightness dec")},
+	{0,        XK_F8,           SPAWN,   STR("do-it.sh brightness inc")},
 
 	// Adjust Workspace
 	{MOD,      XK_1,            CHGWORK, INT(1)},
 	{MOD,      XK_2,            CHGWORK, INT(2)},
 	{MOD,      XK_3,            CHGWORK, INT(3)},
+	{MOD,      XK_4,            CHGWORK, INT(4)},
 	{MOD|SHIFT,XK_1,            MOVWIN,  INT(1)},
 	{MOD|SHIFT,XK_2,            MOVWIN,  INT(2)},
 	{MOD|SHIFT,XK_3,            MOVWIN,  INT(3)},
+	{MOD|SHIFT,XK_4,            MOVWIN,  INT(4)},
 	
 	// Layout
 	{MOD,      XK_i,            CHGLAY,  INT(-1)},

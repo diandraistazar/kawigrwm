@@ -1,14 +1,3 @@
-/* TODO */
-// add another functions (Working) 
-	// allow exitwm (DONE)
-	// allow spawn window (DONE)
-	// allow move window (DONE)
-	// allow resize window (DONE)
-	// allow change another workspace (tags) (DONE)
-// allow adjust focus window, even with pointer (DONE)
-// Dynamic Manager (Tiling and stack)
-// be minimalist and fast
-
 #include "../include/main.hpp"
 
 /* Main functions */

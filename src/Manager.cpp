@@ -120,10 +120,10 @@ void Manager::manage(Window &w){
 	clients->assign(temp, w, wa, g->selmon.get());
 	XSelectInput(g->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
 	XMapWindow(g->dpy, w);
-	XSync(g->dpy, false);
 	grabbuttons(temp->win);
-	focus(temp);
 	arrange_window();
+	focus(temp);
+	XSync(g->dpy, false);
 }
 
 void Manager::unmanage(Client *c){
