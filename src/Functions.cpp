@@ -173,3 +173,15 @@ void Functions::move_win_to_another_workspace(const Arg &args){
 	g->clients->moveClientToAnotherTag(selmon->select, (unsigned int)args.i);
 	XUnmapWindow(g->dpy, selmon->select->win);
 }
+
+void Functions::change_layout(const Arg &args){
+	auto &g = this->global;
+	auto &manager = g->man;
+	auto &config = g->config;
+	auto &selmon = g->selmon;
+
+	unsigned int code = selmon->layout + args.i;
+	if(code == selmon->layout || code > config->layouts.size()-1 ) return;
+	selmon->layout = config->layouts[code];
+	manager->arrange_window();
+}

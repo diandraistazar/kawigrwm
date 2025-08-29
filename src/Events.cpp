@@ -18,6 +18,7 @@ void Events::keypress(XKeyEvent &event){
 				case FOCUS   : functions->adjust_focus(key.args);break;
 				case MOVWIN  : functions->move_win_to_another_workspace(key.args);break;
 				case CHGWORK : functions->change_workspace(key.args);break;
+				case CHGLAY  : functions->change_layout(key.args);break;
 				case KILL    : functions->kill();break;
 				case EXIT    : functions->exitman();break;
 			}

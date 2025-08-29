@@ -17,7 +17,8 @@ void debugme(const char* massage, Args... args){
 }
 
 /* Enum */
-enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN, CHGLAY };
+enum LayoutCODE{ TILING_HORIZONTAL, TILING_VERTICAL };
 /* Arg */
 union Arg{
 	const void *s;
@@ -39,13 +40,6 @@ struct Button{
 	Arg args;
 };
 
-struct Client; struct Monitor;
-class ClientList;
-/* Monitor */
-struct Monitor{
-	Client *select = nullptr;
-	unsigned int tag;
-};
 /* Client */
 struct Client{
 	Window win;
@@ -60,7 +54,14 @@ struct ClientTG{
 	Client *client_tail = nullptr;
 	unsigned int count;
 };
-class Manager; class Events; class Functions; class Layout;
+/* Monitor */
+struct Monitor{
+	Client *select = nullptr;
+	LayoutCODE layout;
+	unsigned int tag;
+};
+
+class Manager; class Events; class Functions; class Layout; class ClientList;
 struct Configuration;
 struct Variables{
 	Display *dpy;
@@ -106,9 +107,10 @@ class Layout{
 private:
 Variables *global;
 public:
+void (Layout::*layouts[2])(ClientTG*);
 Layout(Variables *global);
-void horizontal_tiling(Monitor *selmon, ClientTG *tagsel);
-void vertical_tiling(Monitor *selmon, ClientTG *tagsel);
+void horizontal_tiling(ClientTG *tagsel);
+void vertical_tiling(ClientTG *tagsel);
 };
 
 /* Events class */
@@ -137,6 +139,7 @@ void move_and_resize_window(const Arg &args);
 void adjust_focus(const Arg &args);
 void change_workspace(const Arg &args);
 void move_win_to_another_workspace(const Arg &args);
+void change_layout(const Arg &args);
 };
 
 /* ClientList */

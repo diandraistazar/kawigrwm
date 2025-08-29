@@ -27,7 +27,7 @@ void Manager::init(){
 	
 	// Assign this object
 	g->man = this;
-	// Create Functions and Events memory
+	// Create Functions, Layout and Events memory
 	g->func = make_unique<Functions>(g);
 	g->event = make_unique<Events>(g);
 	g->layout = make_unique<Layout>(g);
@@ -45,6 +45,7 @@ void Manager::init(){
 	g->width_m = DisplayWidth(g->dpy, g->screen);
 	g->height_m = DisplayHeight(g->dpy, g->screen);
 	g->selmon->tag = g->config->default_tag; // default tag
+	g->selmon->layout = g->config->default_layout; // default layout
 	
 	/* Grab Keys */
 	// Yang Dilakukan, untuk mengambil dan mengetahui rentang keycodes yang dapat digunakan nantinya di grab
@@ -160,14 +161,10 @@ void Manager::arrange_window(){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
 	auto &clients = g->clients;
-	auto &layout = g->layout;
+	auto &layouts = g->layout->layouts;
 	
 	ClientTG *current_tag = clients->clients[selmon->tag-1];
 
-
-	if(current_tag->count <= 0) return;
-	
-	//layout->horizontal_tiling(selmon.get(), current_tag);
-	layout->vertical_tiling(selmon.get(), current_tag);
+	if(current_tag->count < 1) return;
+	((g->layout.get())->*layouts[selmon->layout])(current_tag);
 }
-
