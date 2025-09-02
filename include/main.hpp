@@ -57,6 +57,7 @@ struct ClientTG{
 /* Monitor */
 struct Monitor{
 	Client *select = nullptr;
+	Client *prev_select = nullptr;
 	LayoutCODE layout;
 	unsigned int tag;
 };
@@ -94,12 +95,13 @@ void init();
 void cleanup();
 void close();
 void run();
-void grabbuttons(Window &w);
-void manage(Window &w);
+void grabbuttons(Window w);
+void manage(Window w);
 void unmanage(Client *c);
 void focus(Client *c);
 void map_or_unmap(std::string opt, ClientTG *which_tag);
 void arrange_window();
+void warp_pointer(Window win, int width, int height);
 };
 
 /* Layout */

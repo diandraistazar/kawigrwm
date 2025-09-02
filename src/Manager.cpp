@@ -99,7 +99,7 @@ void Manager::run(){
 	}
 }
 
-void Manager::grabbuttons(Window &w){
+void Manager::grabbuttons(Window w){
 	auto &g = this->global;
 	auto &config = g->config;
 	
@@ -109,7 +109,7 @@ void Manager::grabbuttons(Window &w){
 		XGrabButton(g->dpy, button.button, button.mod, w, false, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None);
 }
 
-void Manager::manage(Window &w){
+void Manager::manage(Window w){
 	auto &g = this->global;
 	auto &clients = g->clients;
 	
@@ -123,15 +123,19 @@ void Manager::manage(Window &w){
 	grabbuttons(temp->win);
 	arrange_window();
 	focus(temp);
+	if(temp) warp_pointer(temp->win, temp->width/2, temp->height/2);
 	XSync(g->dpy, false);
 }
 
 void Manager::unmanage(Client *c){
 	auto &g = this->global;
 	
-	focus(c->back ? c->back : c->next);
+	Client *next_select = c->back ? c->back : c->next;
 	g->clients->deleteClient(c);
+	focus(next_select);
 	arrange_window();
+	if(next_select) warp_pointer(next_select->win, next_select->width/2, next_select->height/2);
+	XSync(g->dpy, false);
 }
 
 void Manager::focus(Client *c){
@@ -146,6 +150,7 @@ void Manager::focus(Client *c){
 	else{
 		XSetInputFocus(g->dpy, g->root, RevertToPointerRoot, CurrentTime);
 	}
+	selmon->prev_select = selmon->select;
 	selmon->select = c;
 }
 
@@ -153,8 +158,11 @@ void Manager::map_or_unmap(std::string opt, ClientTG *which_tag){
 	auto &g = this->global;
 
 	for(Client *current = which_tag->client_head; current; current = current->next)
-		if(opt == "map") XMapWindow(g->dpy, current->win);
-		else if(opt == "unmap") XUnmapWindow(g->dpy, current->win);
+		if(opt == "map")
+			XMapWindow(g->dpy, current->win);
+		else if(opt == "unmap")
+			XUnmapWindow(g->dpy, current->win);
+		else break;
 }
 
 void Manager::arrange_window(){
@@ -165,6 +173,12 @@ void Manager::arrange_window(){
 	
 	ClientTG *current_tag = clients->clients[selmon->tag-1];
 
-	if(current_tag->count < 1) return;
-	((g->layout.get())->*layouts[selmon->layout])(current_tag);
+	if(current_tag->count >= 1)
+		((g->layout.get())->*layouts[selmon->layout])(current_tag);
+}
+
+void Manager::warp_pointer(Window win, int width, int height){
+	auto &g = this->global;
+
+	XWarpPointer(g->dpy, None, win, 0, 0, 0, 0, width, height);
 }

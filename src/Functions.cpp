@@ -41,7 +41,7 @@ void Functions::move_and_resize_window(const Arg &args){
 	// deklerasi variabel selected tipe std::functions, yang berfungsi menyimpan berbagai object yang dapat dipanggil,
 	// seperti functions, lambda, method, atau pointer fungsi
 	// Intinya, dengan ini ente dapat menyimpan berbagai callable , sehingga dapat mencapai polymorphism
-	int x_temp = 0, y_temp = 0, x_root_temp = 0, y_root_temp = 0;
+	int prev_x_root = 0, prev_y_root = 0;
 	int width_temp, height_temp;
 	int lasttime = 0;
 	int dummy_i;
@@ -52,31 +52,24 @@ void Functions::move_and_resize_window(const Arg &args){
 	
 	switch(args.i){
 		case -1: // Move Window
-			selected = [&g, &selmon, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &event](){
-			x_temp = event.xmotion.x_root - x_root_temp;
-			y_temp = event.xmotion.y_root - y_root_temp;
-		
-			x_root_temp = event.xmotion.x_root;
-			y_root_temp = event.xmotion.y_root;
-
-			selmon->select->x += x_temp;
-			selmon->select->y += y_temp;
+			selected = [&g, &selmon, &prev_x_root, &prev_y_root, &event](){
+			selmon->select->x += event.xmotion.x_root - prev_x_root;
+			selmon->select->y += event.xmotion.y_root - prev_y_root;
+			prev_x_root = event.xmotion.x_root;
+			prev_y_root = event.xmotion.y_root;
 			XMoveWindow(g->dpy, selmon->select->win, selmon->select->x, selmon->select->y);
 			}; break;
 		case 1: // Resize Window
-			selected = [&g, &selmon, &event, &x_temp, &y_temp, &x_root_temp, &y_root_temp, &width_temp, &height_temp](){
-			x_temp = event.xmotion.x_root - x_root_temp;
-			y_temp = event.xmotion.y_root - y_root_temp;
-
-			x_root_temp = event.xmotion.x_root;
-			y_root_temp = event.xmotion.y_root;
-
+			selected = [&g, &selmon, &event, &prev_x_root, &prev_y_root, &width_temp, &height_temp](){
 			width_temp = selmon->select->width;
 			height_temp = selmon->select->height;
 	
-			width_temp += x_temp;
-			height_temp += y_temp;
-			
+			width_temp +=  event.xmotion.x_root - prev_x_root;
+			height_temp += event.xmotion.y_root - prev_y_root;
+
+			prev_x_root = event.xmotion.x_root;
+			prev_y_root = event.xmotion.y_root;
+					
 			if(width_temp > 100) selmon->select->width = width_temp;
 			if(height_temp > 100) selmon->select->height = height_temp;
 		
@@ -84,7 +77,7 @@ void Functions::move_and_resize_window(const Arg &args){
 			}; break;
 	}
 	 
-	XQueryPointer(g->dpy, g->root, &dummy_w, &dummy_w, &x_root_temp, &y_root_temp, &dummy_i, &dummy_i, &maskval);
+	XQueryPointer(g->dpy, g->root, &dummy_w, &dummy_w, &prev_x_root, &prev_y_root, &dummy_i, &dummy_i, &maskval);
 	XGrabPointer(g->dpy, g->root, false,
 				 PointerMotionMask|ButtonPressMask|ButtonReleaseMask,
 				 GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
@@ -107,25 +100,24 @@ void Functions::adjust_focus(const Arg &args){
 	auto &g = this->global;
 	auto &selmon = g->selmon;
 	auto &manager = g->man;
+	auto &clients = g->clients;
 	
+	ClientTG *current_tag = clients->clients[selmon->tag-1];
 	Client *temp = nullptr;
-	
-	if(!selmon->select && (args.i == -1 || args.i == 1))
-		temp = g->clients->clients[selmon->tag-1]->client_head;
-	else
-		switch(args.i){
-			case -1:
-				temp = selmon->select->back ? selmon->select->back : g->clients->clients[selmon->tag-1]->client_tail;
-				break;
-			case 1:
-				temp = selmon->select->next ? selmon->select->next : g->clients->clients[selmon->tag-1]->client_head;
-				break;
-			default: return;
-		}
 
+	if(selmon->select){
+		if(args.i == -1)
+			temp = selmon->select->back ? selmon->select->back : current_tag->client_tail;
+		else if(args.i == 1 )
+			temp = selmon->select->next ? selmon->select->next : current_tag->client_head;
+	}
+	else
+		temp = current_tag->client_head;
+
+	if(!temp || temp == selmon->select) return;
 	// Membungkus pointer dengan area, jika mencapai batas area, kita dapat memindahkan posisi pointer ke dst_x & dst_y
 	// Pokoknya, pointer di bungkus dalam suatu area, dan dapat memanipulasi pergerakan pointer di area tersebut
-	XWarpPointer(g->dpy, None, temp->win, 0, 0, 0, 0, temp->width / 2, temp->height /2);
+	manager->warp_pointer(temp->win, temp->width/2, temp->height/2);
 	manager->focus(temp);
 }
 
@@ -136,7 +128,7 @@ void Functions::change_workspace(const Arg &args){
 	auto &clients = g->clients;
 	auto &config = g->config;
 
-	unsigned int tag_temp = selmon->tag;
+	int tag_temp = selmon->tag;
 	
 	switch(args.i){
 		case -2: tag_temp -= 1;
@@ -147,9 +139,9 @@ void Functions::change_workspace(const Arg &args){
 			break;
 	}
 
-	if(tag_temp == selmon->tag
+	if(tag_temp == (int)selmon->tag
 	   || tag_temp < 1
-	   || tag_temp > config->tags) return;
+	   || tag_temp > (int)config->tags) return;
 
 	manager->map_or_unmap("unmap", clients->clients[selmon->tag-1]);
 	manager->map_or_unmap("map", clients->clients[tag_temp-1]);
@@ -183,8 +175,8 @@ void Functions::change_layout(const Arg &args){
 	auto &config = g->config;
 	auto &selmon = g->selmon;
 
-	unsigned int code = selmon->layout + args.i;
-	if(code == selmon->layout || code > config->layouts.size()-1 ) return;
+	int code = selmon->layout + args.i;
+	if(code == selmon->layout || code < 0 || code > (int)config->layouts.size()-1 ) return;
 	selmon->layout = config->layouts[code];
 	manager->arrange_window();
 }

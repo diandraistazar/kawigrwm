@@ -41,7 +41,16 @@ void Events::maprequest(XMapRequestEvent &event){
 	auto &manager = g->man;
 	auto &clients = g->clients;
 	
-	if(!g->clients->findClient(event.window, clients->clients[g->selmon->tag-1]))
+	bool isThere = false;
+
+	for(int select = clients->clients.size(); select > 0; select--){
+		if(g->clients->findClient(event.window, clients->clients[select-1])){
+			isThere = true;
+			break;
+		}
+	}
+
+	if(!isThere) 
 		manager->manage(event.window);
 }
 
