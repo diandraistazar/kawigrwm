@@ -113,28 +113,28 @@ void Manager::manage(Window w){
 	auto &g = this->global;
 	auto &clients = g->clients;
 	
-	XWindowAttributes wa;
-	Client *temp = g->clients->createNewClient();
+	Client *temp = clients->createNewClient(w);
 	
-	XGetWindowAttributes(g->dpy, w, &wa);
-	clients->assign(temp, w, wa, g->selmon.get());
+	XMapWindow(g->dpy, temp->win);
 	XSelectInput(g->dpy, w, EnterWindowMask|LeaveWindowMask); /* Agar dapat event dari child window dan dapat di proses */
-	XMapWindow(g->dpy, w);
 	grabbuttons(temp->win);
 	arrange_window();
+	warp_pointer(temp->win, temp->width/2, temp->height/2);
 	focus(temp);
-	if(temp) warp_pointer(temp->win, temp->width/2, temp->height/2);
 	XSync(g->dpy, false);
 }
 
 void Manager::unmanage(Client *c){
 	auto &g = this->global;
+	auto &clients = g->clients;
 	
 	Client *next_select = c->back ? c->back : c->next;
-	g->clients->deleteClient(c);
-	focus(next_select);
+	
+	clients->deleteClient(c);
 	arrange_window();
-	if(next_select) warp_pointer(next_select->win, next_select->width/2, next_select->height/2);
+	if(next_select)
+		warp_pointer(next_select->win, next_select->width/2, next_select->height/2);
+	focus(next_select);
 	XSync(g->dpy, false);
 }
 
@@ -179,6 +179,5 @@ void Manager::arrange_window(){
 
 void Manager::warp_pointer(Window win, int width, int height){
 	auto &g = this->global;
-
 	XWarpPointer(g->dpy, None, win, 0, 0, 0, 0, width, height);
 }

@@ -42,9 +42,8 @@ void Events::maprequest(XMapRequestEvent &event){
 	auto &clients = g->clients;
 	
 	bool isThere = false;
-
-	for(int select = clients->clients.size(); select > 0; select--){
-		if(g->clients->findClient(event.window, clients->clients[select-1])){
+	for(int select = clients->clients.size()-1; select >= 0; select--){
+		if(g->clients->findClient(event.window, clients->clients[select])){
 			isThere = true;
 			break;
 		}
@@ -66,14 +65,9 @@ void Events::destroynotify(XDestroyWindowEvent &event){
 
 void Events::enternotify(XCrossingEvent &event){
 	auto &g = this->global;
-	auto &selmon = g->selmon;
 	auto &manager = g->man;
 	auto &clients = g->clients;
 	
-	Client *c;
-	if(selmon->select && (event.window == selmon->select->win)) return;
-	c = event.window != g->root
-		? g->clients->findClient(event.window, clients->clients[g->selmon->tag-1])
-		: nullptr;
+	Client *c = event.window != g->root ? g->clients->findClient(event.window, clients->clients[g->selmon->tag-1]) : nullptr;
 	manager->focus(c);
 }

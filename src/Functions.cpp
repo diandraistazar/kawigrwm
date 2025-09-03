@@ -126,7 +126,6 @@ void Functions::change_workspace(const Arg &args){
 	auto &selmon = g->selmon;
 	auto &manager = g->man;
 	auto &clients = g->clients;
-	auto &config = g->config;
 
 	int tag_temp = selmon->tag;
 	
@@ -141,7 +140,7 @@ void Functions::change_workspace(const Arg &args){
 
 	if(tag_temp == (int)selmon->tag
 	   || tag_temp < 1
-	   || tag_temp > (int)config->tags) return;
+	   || tag_temp > (int)clients->clients.size()) return;
 
 	manager->map_or_unmap("unmap", clients->clients[selmon->tag-1]);
 	manager->map_or_unmap("map", clients->clients[tag_temp-1]);
@@ -153,18 +152,15 @@ void Functions::move_win_to_another_workspace(const Arg &args){
 	auto &g = this->global;
 	auto &manager = g->man;
 	auto &selmon = g->selmon;
-	auto &config = g->config;
 	auto &clients = g->clients;
 
 	// checking
-	if((unsigned int)args.i == selmon->tag
-	   || (unsigned int)args.i > config->tags
-	   || (unsigned int)args.i < 1
-	   || (unsigned int)args.i-1 > clients->clients.size()
-	   || !selmon->select)
+	if(!selmon->select
+	   || args.i < 1
+	   || args.i > (int)clients->clients.size())
 		return;
 
-	g->clients->moveClientToAnotherTag(selmon->select, (unsigned int)args.i);
+	g->clients->moveClientToAnotherTag(selmon->select, args.i);
 	XUnmapWindow(g->dpy, selmon->select->win);
 	manager->arrange_window();
 }
@@ -176,7 +172,10 @@ void Functions::change_layout(const Arg &args){
 	auto &selmon = g->selmon;
 
 	int code = selmon->layout + args.i;
-	if(code == selmon->layout || code < 0 || code > (int)config->layouts.size()-1 ) return;
+	if(code == selmon->layout
+	   || code < 0
+	   || code > (int)config->layouts.size()-1 )
+		return;
 	selmon->layout = config->layouts[code];
 	manager->arrange_window();
 }

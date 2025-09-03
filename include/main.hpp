@@ -9,13 +9,6 @@
 #include <cstring>
 #include <unistd.h>
 
-template <typename... Args>
-void debugme(const char* massage, Args... args){
-	FILE *ptr = fopen("/home/diandra/Documents/Coding/kawigrwm/debugme", "a");
-	std::fprintf(ptr, massage, args...);
-	fclose(ptr);
-}
-
 /* Enum */
 enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN, CHGLAY };
 enum LayoutCODE{ TILING_HORIZONTAL, TILING_VERTICAL };
@@ -151,14 +144,13 @@ Variables *global;
 public:
 std::vector<ClientTG*> clients;
 ClientList(Variables *global);
-void assign(Client *c, Window w, XWindowAttributes &wa, Monitor *selmon);
 void cleanup();
-Client *createNewClient();
+Client *createNewClient(Window w);
 Client *findClient(Window w, ClientTG *current_tag);
 void deleteClient(Client *c);
-void moveClientToAnotherTag(Client *select, unsigned int which_tag);
-void display();
+void moveClientToAnotherTag(Client *select, int i_dest_tag);
 private:
 void removeClientFromTag(Client *select, ClientTG *tagsel);
 void addClientToTag(Client *select, ClientTG *dest_tag);
+void assign(Client *c, Window w);
 };

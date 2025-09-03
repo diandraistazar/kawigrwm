@@ -8,40 +8,33 @@ ClientList::ClientList(Variables *global) : global(global){
 		clients.push_back(new ClientTG);
 }
 
-void ClientList::assign(Client *c, Window w, XWindowAttributes &wa, Monitor *selmon){
-	if(!c) return;
-	c->x = wa.x;
-	c->y = wa.y;
-	c->win = w;
-	c->width = wa.width;
-	c->height = wa.height;
-	c->tag = selmon->tag;
-	c->root = wa.root;
-}
-
 void ClientList::cleanup(){
 	auto &g = this->global;
 	auto &config = g->config;
 
 	for(int workspace = config->tags-1; workspace >= 0; workspace--){
 		ClientTG *current_tag = clients[workspace];
-		while(current_tag->client_head){
-			Client *temp = current_tag->client_head->next;
-			delete current_tag->client_head;
-			current_tag->client_head = temp;
+		Client *current = current_tag->client_head;
+		
+		while(current){
+			Client *temp = current;
+			current = current->next;
+			delete temp;
 		}
+		
 		delete current_tag;
 		clients.pop_back();
 	}
 }
 
-Client *ClientList::createNewClient(){
+Client *ClientList::createNewClient(Window w){
 	auto &g = this->global;
 
 	ClientTG *current_tag = clients[g->selmon->tag-1];
 	Client *new_client = new Client;
 	
 	addClientToTag(new_client, current_tag);
+	assign(new_client, w);
 	return new_client;
 }
 
@@ -59,27 +52,13 @@ void ClientList::deleteClient(Client *c){
 	delete c;
 }
 
-void ClientList::moveClientToAnotherTag(Client *select, unsigned int which_tag){
+void ClientList::moveClientToAnotherTag(Client *select, int i_dest_tag){
 	ClientTG *source_tag = clients[select->tag-1];
-	ClientTG *dest_tag = clients[which_tag-1];
+	ClientTG *dest_tag = clients[i_dest_tag-1];
 
-	select->tag = which_tag;
 	removeClientFromTag(select, source_tag);
 	addClientToTag(select, dest_tag);
-}
-
-void ClientList::display(){
-	auto &g = this->global;
-	auto &config = g->config;
-
-	for(unsigned int workspace = 0; workspace < config->tags; workspace++){
-		ClientTG *current_tag = clients[workspace];
-		Client *client;
-		debugme("Workspace %d\n", workspace);
-		for(client = current_tag->client_head; client; client = client->next){
-			debugme("client_tag: %d\n", client->tag);
-		}
-	}
+	select->tag = i_dest_tag;
 }
 
 /* Private */
@@ -114,4 +93,21 @@ void ClientList::addClientToTag(Client *select, ClientTG *tagsel){
 
 	tagsel->client_tail = select;
 	tagsel->count++;
+}
+
+void ClientList::assign(Client *c, Window w){
+	auto &g = this->global;
+
+	if(!c) return;
+
+	XWindowAttributes wa;
+	XGetWindowAttributes(g->dpy, w, &wa);
+	
+	c->win = w;
+	c->root = wa.root;
+	c->tag = g->selmon->tag;
+	c->x = wa.x;
+	c->y = wa.y;
+	c->width = g->width_m;
+	c->height = g->height_m;
 }

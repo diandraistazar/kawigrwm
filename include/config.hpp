@@ -6,7 +6,7 @@ unsigned int gaps = 8;
 
 /* Tags */
 const unsigned int default_tag = 1;
-const unsigned int tags = 10;
+const unsigned int tags = 4;
 
 /*Layouts*/
 const LayoutCODE default_layout = TILING_HORIZONTAL;
