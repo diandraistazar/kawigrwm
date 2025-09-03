@@ -179,3 +179,18 @@ void Functions::change_layout(const Arg &args){
 	selmon->layout = config->layouts[code];
 	manager->arrange_window();
 }
+
+void Functions::adjust_gaps_size(const Arg &args){
+	auto &g = this->global;
+	auto &manager = g->man;
+	auto &config = g->config;
+
+	config->gaps += args.i;
+
+	if(config->gaps < config->minmax_gaps[0])
+		config->gaps = config->minmax_gaps[0];
+	else if(config->gaps > config->minmax_gaps[1])
+		config->gaps = config->minmax_gaps[1];
+
+	manager->arrange_window();
+}

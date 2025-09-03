@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 /* Enum */
-enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN, CHGLAY };
+enum Code{ SPAWN, KILL, FOCUS, EXIT, MOVRESZ, CHGWORK, MOVWIN, CHGLAY, ADJGAPS };
 enum LayoutCODE{ TILING_HORIZONTAL, TILING_VERTICAL };
 /* Arg */
 union Arg{
@@ -135,6 +135,7 @@ void adjust_focus(const Arg &args);
 void change_workspace(const Arg &args);
 void move_win_to_another_workspace(const Arg &args);
 void change_layout(const Arg &args);
+void adjust_gaps_size(const Arg &args);
 };
 
 /* ClientList */

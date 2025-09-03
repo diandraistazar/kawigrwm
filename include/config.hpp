@@ -1,8 +1,9 @@
-using std::vector;
+using std::vector, std::array;
 
 struct Configuration{
 /* Gaps */
-unsigned int gaps = 8;
+int gaps = 8;
+array<int, 2> minmax_gaps = {0, 350};
 
 /* Tags */
 const unsigned int default_tag = 1;
@@ -34,6 +35,10 @@ const vector<Key> keys = {
 	{MOD,      XK_j,            FOCUS,   INT(-1)},
 	{MOD,      XK_k,            FOCUS,   INT(1)},
 	
+	// Adjust gaps
+	{MOD|SHIFT,XK_equal,        ADJGAPS, INT(6)},
+	{MOD|SHIFT,XK_minus,        ADJGAPS, INT(-6)},
+
 	// Spawn program
 	{MOD,      XK_Return,       SPAWN,   STR("alacritty")},
 	{0,        XK_F9,           SPAWN,   STR("do-it.sh volume dec")},
